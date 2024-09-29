@@ -27,6 +27,13 @@ func (c *WriteHeavyCache[K, V]) Get(key K) (V, bool) {
 	return v, found
 }
 
+// Clear removes all items from WriteHeavyCache
+func (c *WriteHeavyCache[K, V]) Clear() {
+	c.Lock()
+	c.items = make(map[K]V)
+	c.Unlock()
+}
+
 // Set sets a value in ReadHeavyCache, locking for the write operation
 func (c *ReadHeavyCache[K, V]) Set(key K, value V) {
 	c.Lock()
@@ -40,6 +47,13 @@ func (c *ReadHeavyCache[K, V]) Get(key K) (V, bool) {
 	v, found := c.items[key]
 	c.RUnlock()
 	return v, found
+}
+
+// Clear removes all items from ReadHeavyCache
+func (c *ReadHeavyCache[K, V]) Clear() {
+	c.Lock()
+	c.items = make(map[K]V)
+	c.Unlock()
 }
 
 // NewWriteHeavyCache creates a new instance of WriteHeavyCache
@@ -117,6 +131,12 @@ func (c *WriteHeavyCacheInteger[K, V]) Incr(key K, value V) {
 	c.Unlock()
 }
 
+func (c *WriteHeavyCacheInteger[K, V]) Clear() {
+	c.Lock()
+	c.items = make(map[K]V)
+	c.Unlock()
+}
+
 // Set sets a value in ReadHeavyCacheInteger, locking for the write operation
 func (c *ReadHeavyCacheInteger[K, V]) Set(key K, value V) {
 	c.Lock()
@@ -141,5 +161,11 @@ func (c *ReadHeavyCacheInteger[K, V]) Incr(key K, value V) {
 	} else {
 		c.items[key] = value
 	}
+	c.Unlock()
+}
+
+func (c *ReadHeavyCacheInteger[K, V]) Clear() {
+	c.Lock()
+	c.items = make(map[K]V)
 	c.Unlock()
 }

@@ -30,6 +30,36 @@ func TestReadHeavyCache_SetAndGet(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCache_Clear(t *testing.T) {
+	cache := cache.NewWriteHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	cache.Clear()
+
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be cleared")
+	}
+	if _, found := cache.Get("key2"); found {
+		t.Errorf("Expected key2 to be cleared")
+	}
+}
+
+func TestReadHeavyCache_Clear(t *testing.T) {
+	cache := cache.NewReadHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	cache.Clear()
+
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be cleared")
+	}
+	if _, found := cache.Get("key2"); found {
+		t.Errorf("Expected key2 to be cleared")
+	}
+}
+
 func TestWriteHeavyCacheInteger_SetAndGet(t *testing.T) {
 	cache := cache.NewWriteHeavyCacheInteger[int, int]()
 	cache.Set(1, 300)
@@ -87,6 +117,36 @@ func TestReadHeavyCacheInteger_Incr(t *testing.T) {
 		t.Errorf("Expected key 1 to be found")
 	} else if value != 30 {
 		t.Errorf("Expected value 30 for key 1, but got %d", value)
+	}
+}
+
+func TestWriteHeavyCacheInteger_Clear(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheInteger[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	cache.Clear()
+
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be cleared")
+	}
+	if _, found := cache.Get("key2"); found {
+		t.Errorf("Expected key2 to be cleared")
+	}
+}
+
+func TestReadHeavyCacheInteger_Clear(t *testing.T) {
+	cache := cache.NewReadHeavyCacheInteger[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	cache.Clear()
+
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be cleared")
+	}
+	if _, found := cache.Get("key2"); found {
+		t.Errorf("Expected key2 to be cleared")
 	}
 }
 

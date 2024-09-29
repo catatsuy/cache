@@ -133,23 +133,27 @@ func main() {
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, returning a boolean indicating whether the key exists.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### ReadHeavyCache
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, allowing concurrent reads.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### WriteHeavyCacheInteger
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
 - **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### ReadHeavyCacheInteger
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
 - **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ## Acknowledgements
 
