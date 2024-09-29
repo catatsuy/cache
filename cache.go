@@ -3,73 +3,76 @@ package cache
 import "sync"
 
 type WriteHeavyCache[K comparable, V any] struct {
-	sync.Mutex // For Write Heavy, use Mutex for all operations
+	sync.Mutex // WriteHeavyCache uses Mutex for all operations
 	items      map[K]V
 }
 
 type ReadHeavyCache[K comparable, V any] struct {
-	sync.RWMutex // For Read Heavy, allow concurrent read access
+	sync.RWMutex // ReadHeavyCache allows concurrent read access with RWMutex
 	items        map[K]V
 }
 
-// Write Heavy methods
+// Set sets a value in WriteHeavyCache, locking for the write operation
 func (c *WriteHeavyCache[K, V]) Set(key K, value V) {
-	c.Lock() // Lock for writing
+	c.Lock()
 	c.items[key] = value
 	c.Unlock()
 }
 
+// Get retrieves a value from WriteHeavyCache, locking for read as well
 func (c *WriteHeavyCache[K, V]) Get(key K) (V, bool) {
-	c.Lock() // Lock for reading as well, single-thread access
+	c.Lock()
 	v, found := c.items[key]
 	c.Unlock()
 	return v, found
 }
 
-// Read Heavy methods
+// Set sets a value in ReadHeavyCache, locking for the write operation
 func (c *ReadHeavyCache[K, V]) Set(key K, value V) {
-	c.Lock() // Lock for writing
+	c.Lock()
 	c.items[key] = value
 	c.Unlock()
 }
 
+// Get retrieves a value from ReadHeavyCache, using a read lock
 func (c *ReadHeavyCache[K, V]) Get(key K) (V, bool) {
-	c.RLock() // RLock for reading, allows multiple concurrent reads
+	c.RLock()
 	v, found := c.items[key]
 	c.RUnlock()
 	return v, found
 }
 
-// Constructor for Write Heavy cache
+// NewWriteHeavyCache creates a new instance of WriteHeavyCache
 func NewWriteHeavyCache[K comparable, V any]() *WriteHeavyCache[K, V] {
 	return &WriteHeavyCache[K, V]{
 		items: make(map[K]V),
 	}
 }
 
-// Constructor for Read Heavy cache
+// NewReadHeavyCache creates a new instance of ReadHeavyCache
 func NewReadHeavyCache[K comparable, V any]() *ReadHeavyCache[K, V] {
 	return &ReadHeavyCache[K, V]{
 		items: make(map[K]V),
 	}
 }
 
-// cacheInteger with manual type constraints for integer-like types.
+// WriteHeavyCacheInteger is a write-heavy cache for integer-like types
 type WriteHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }] struct {
-	sync.Mutex // Use Mutex for write-heavy scenarios
+	sync.Mutex // WriteHeavyCacheInteger uses Mutex for write-heavy scenarios
 	items      map[K]V
 }
 
+// ReadHeavyCacheInteger is a read-heavy cache for integer-like types
 type ReadHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }] struct {
-	sync.RWMutex // Use RWMutex for read-heavy scenarios
+	sync.RWMutex // ReadHeavyCacheInteger uses RWMutex for read-heavy scenarios
 	items        map[K]V
 }
 
-// NewWriteHeavyCacheInteger constructor for creating a new write-heavy cache.
+// NewWriteHeavyCacheInteger creates a new write-heavy cache for integer types
 func NewWriteHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }]() *WriteHeavyCacheInteger[K, V] {
@@ -78,7 +81,7 @@ func NewWriteHeavyCacheInteger[K comparable, V interface {
 	}
 }
 
-// NewReadHeavyCacheInteger constructor for creating a new read-heavy cache.
+// NewReadHeavyCacheInteger creates a new read-heavy cache for integer types
 func NewReadHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }]() *ReadHeavyCacheInteger[K, V] {
@@ -87,56 +90,56 @@ func NewReadHeavyCacheInteger[K comparable, V interface {
 	}
 }
 
-// Write-heavy Set method using Mutex
+// Set sets a value in WriteHeavyCacheInteger, locking for the write operation
 func (c *WriteHeavyCacheInteger[K, V]) Set(key K, value V) {
-	c.Lock() // Lock for writing
+	c.Lock()
 	c.items[key] = value
-	c.Unlock() // Unlock after write is complete
+	c.Unlock()
 }
 
-// Write-heavy Get method using Mutex
+// Get retrieves a value from WriteHeavyCacheInteger, locking for read as well
 func (c *WriteHeavyCacheInteger[K, V]) Get(key K) (V, bool) {
-	c.Lock() // Lock for reading (Mutex is used for both read and write)
+	c.Lock()
 	v, found := c.items[key]
-	c.Unlock() // Unlock after read is complete
+	c.Unlock()
 	return v, found
 }
 
-// Write-heavy Incr method using Mutex
+// Incr increments a value in WriteHeavyCacheInteger, locking for the operation
 func (c *WriteHeavyCacheInteger[K, V]) Incr(key K, value V) {
-	c.Lock() // Lock for incrementing
+	c.Lock()
 	v, found := c.items[key]
 	if found {
 		c.items[key] = v + value
 	} else {
 		c.items[key] = value
 	}
-	c.Unlock() // Unlock after modification
+	c.Unlock()
 }
 
-// Read-heavy Set method using RWMutex
+// Set sets a value in ReadHeavyCacheInteger, locking for the write operation
 func (c *ReadHeavyCacheInteger[K, V]) Set(key K, value V) {
-	c.Lock() // Lock for writing
+	c.Lock()
 	c.items[key] = value
-	c.Unlock() // Unlock after write is complete
+	c.Unlock()
 }
 
-// Read-heavy Get method using RWMutex
+// Get retrieves a value from ReadHeavyCacheInteger, using a read lock
 func (c *ReadHeavyCacheInteger[K, V]) Get(key K) (V, bool) {
-	c.RLock() // RLock for reading, allows multiple concurrent reads
+	c.RLock()
 	v, found := c.items[key]
-	c.RUnlock() // Unlock after read is complete
+	c.RUnlock()
 	return v, found
 }
 
-// Read-heavy Incr method using RWMutex
+// Incr increments a value in ReadHeavyCacheInteger, locking for the operation
 func (c *ReadHeavyCacheInteger[K, V]) Incr(key K, value V) {
-	c.Lock() // Lock for incrementing (write operation)
+	c.Lock()
 	v, found := c.items[key]
 	if found {
 		c.items[key] = v + value
 	} else {
 		c.items[key] = value
 	}
-	c.Unlock() // Unlock after modification
+	c.Unlock()
 }
