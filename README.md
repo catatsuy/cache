@@ -9,6 +9,10 @@ This library provides two types of caches optimized for different usage patterns
 - Supports **generic types** for flexible key-value storage.
 - Specialized caches for **integer-like types** to support operations like increments.
 
+## Documentation
+
+For full API documentation, visit [pkg.go.dev](https://pkg.go.dev/github.com/catatsuy/cache).
+
 ## Usage
 
 ### WriteHeavyCache
