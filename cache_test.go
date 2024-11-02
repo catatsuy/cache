@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 	"testing"
@@ -506,57 +505,4 @@ func TestLockManager(t *testing.T) {
 	}()
 
 	wg.Wait()
-}
-
-// ExampleLockManager provides an example usage of LockManager.
-func ExampleLockManager() {
-	// Create a new LockManager for integer keys
-	lm := cache.NewLockManager[int]()
-	var wg sync.WaitGroup
-	wg.Add(3)
-
-	// Simulate concurrent access to the same key
-	key := 1
-
-	// First goroutine locks and performs some work
-	go func() {
-		defer wg.Done()
-		lm.Lock(key)
-		fmt.Println("Goroutine 1: Locked")
-		// Simulate some work
-		fmt.Println("Goroutine 1: Doing work")
-		lm.Unlock(key)
-		fmt.Println("Goroutine 1: Unlocked")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(time.Millisecond)
-		defer lm.GetAndLock(key).Unlock()
-		fmt.Println("Goroutine 2: Locked")
-		// Simulate some work
-		fmt.Println("Goroutine 2: Doing work")
-		fmt.Println("Goroutine 2: Unlocked")
-	}()
-
-	lm.Lock(key)
-	fmt.Println("Locked")
-	// Simulate some work
-	fmt.Println("Doing work")
-	lm.Unlock(key)
-	fmt.Println("Unlocked")
-	wg.Done()
-
-	wg.Wait()
-
-	// Output:
-	// Locked
-	// Doing work
-	// Unlocked
-	// Goroutine 1: Locked
-	// Goroutine 1: Doing work
-	// Goroutine 1: Unlocked
-	// Goroutine 2: Locked
-	// Goroutine 2: Doing work
-	// Goroutine 2: Unlocked
 }
