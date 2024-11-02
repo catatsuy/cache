@@ -210,6 +210,42 @@ func TestReadHeavyCache_ParallelWrite(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCacheExpired_SetAndGet(t *testing.T) {
+	c := cache.NewWriteHeavyCacheExpired[int, string]()
+
+	// Set an item with a 1-second expiration
+	c.Set(1, "test", 1*time.Second)
+
+	// Retrieve the item immediately
+	if value, found := c.Get(1); !found || value != "test" {
+		t.Errorf("Expected 'test', got %v", value)
+	}
+
+	// Wait for 2 seconds and check if it expires
+	time.Sleep(2 * time.Second)
+	if _, found := c.Get(1); found {
+		t.Error("Expected item to be expired, but it was found")
+	}
+}
+
+func TestReadHeavyCacheExpired_SetAndGet(t *testing.T) {
+	c := cache.NewReadHeavyCacheExpired[int, string]()
+
+	// Set an item with a 1-second expiration
+	c.Set(1, "test", 1*time.Second)
+
+	// Retrieve the item immediately
+	if value, found := c.Get(1); !found || value != "test" {
+		t.Errorf("Expected 'test', got %v", value)
+	}
+
+	// Wait for 2 seconds and check if it expires
+	time.Sleep(2 * time.Second)
+	if _, found := c.Get(1); found {
+		t.Error("Expected item to be expired, but it was found")
+	}
+}
+
 // Benchmark for WriteHeavyCache's Set method
 func BenchmarkWriteHeavyCache_Set(b *testing.B) {
 	cache := cache.NewWriteHeavyCache[int, int]()

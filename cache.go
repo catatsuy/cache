@@ -1,6 +1,9 @@
 package cache
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 type WriteHeavyCache[K comparable, V any] struct {
 	sync.Mutex // WriteHeavyCache uses Mutex for all operations
@@ -68,6 +71,79 @@ func NewReadHeavyCache[K comparable, V any]() *ReadHeavyCache[K, V] {
 	return &ReadHeavyCache[K, V]{
 		items: make(map[K]V),
 	}
+}
+
+type expiredValue[V any] struct {
+	value  V
+	expire time.Time
+}
+
+// WriteHeavyCacheExpired uses a Mutex for all operations
+type WriteHeavyCacheExpired[K comparable, V any] struct {
+	sync.Mutex
+	items map[K]expiredValue[V]
+}
+
+// ReadHeavyCacheExpired allows concurrent read access with RWMutex
+type ReadHeavyCacheExpired[K comparable, V any] struct {
+	sync.RWMutex
+	items map[K]expiredValue[V]
+}
+
+// NewWriteHeavyCacheExpired creates a new instance of WriteHeavyCacheExpired
+func NewWriteHeavyCacheExpired[K comparable, V any]() *WriteHeavyCacheExpired[K, V] {
+	return &WriteHeavyCacheExpired[K, V]{items: make(map[K]expiredValue[V])}
+}
+
+// NewReadHeavyCacheExpired creates a new instance of ReadHeavyCacheExpired
+func NewReadHeavyCacheExpired[K comparable, V any]() *ReadHeavyCacheExpired[K, V] {
+	return &ReadHeavyCacheExpired[K, V]{items: make(map[K]expiredValue[V])}
+}
+
+// Set method for WriteHeavyCacheExpired with a specified expiration duration
+func (c *WriteHeavyCacheExpired[K, V]) Set(key K, value V, duration time.Duration) {
+	val := expiredValue[V]{
+		value:  value,
+		expire: time.Now().Add(duration),
+	}
+	c.Lock()
+	defer c.Unlock()
+	c.items[key] = val
+}
+
+// Get method for WriteHeavyCacheExpired
+func (c *WriteHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
+	c.Lock()
+	defer c.Unlock()
+	v, found := c.items[key]
+	if !found || time.Now().After(v.expire) {
+		var zero V
+		return zero, false
+	}
+	return v.value, true
+}
+
+// Set method for ReadHeavyCacheExpired with a specified expiration duration
+func (c *ReadHeavyCacheExpired[K, V]) Set(key K, value V, duration time.Duration) {
+	val := expiredValue[V]{
+		value:  value,
+		expire: time.Now().Add(duration),
+	}
+	c.Lock()
+	defer c.Unlock()
+	c.items[key] = val
+}
+
+// Get method for ReadHeavyCacheExpired
+func (c *ReadHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
+	c.RLock()
+	defer c.RUnlock()
+	v, found := c.items[key]
+	if !found || time.Now().After(v.expire) {
+		var zero V
+		return zero, false
+	}
+	return v.value, true
 }
 
 // WriteHeavyCacheInteger is a write-heavy cache for integer-like types

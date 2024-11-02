@@ -69,6 +69,83 @@ func main() {
 }
 ```
 
+### WriteHeavyCacheExpired and ReadHeavyCacheExpired
+
+The `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired` caches provide expiration functionality for stored items. You can specify an expiration duration for each item, after which it will no longer be accessible.
+
+- **WriteHeavyCacheExpired**: Optimized for write-heavy scenarios, using `sync.Mutex` for all operations.
+- **ReadHeavyCacheExpired**: Optimized for read-heavy scenarios, using `sync.RWMutex` to allow multiple readers concurrently while still locking for writes.
+
+#### WriteHeavyCacheExpired Example
+
+The `WriteHeavyCacheExpired` cache is designed for situations where write operations are more frequent.
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	c := cache.NewWriteHeavyCacheExpired[int, string]()
+
+	// Set an item with a 1-second expiration
+	c.Set(1, "apple", 1*time.Second)
+
+	// Retrieve the item immediately
+	if value, found := c.Get(1); found {
+		fmt.Println("Found:", value) // Output: Found: apple
+	} else {
+		fmt.Println("Not found")
+	}
+
+	// Wait for the item to expire
+	time.Sleep(2 * time.Second)
+	if _, found := c.Get(1); !found {
+		fmt.Println("Item has expired") // Output: Item has expired
+	}
+}
+```
+
+#### ReadHeavyCacheExpired Example
+
+The `ReadHeavyCacheExpired` cache is designed for scenarios where read operations are more frequent than writes.
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	c := cache.NewReadHeavyCacheExpired[int, string]()
+
+	// Set an item with a 1-second expiration
+	c.Set(1, "orange", 1*time.Second)
+
+	// Retrieve the item immediately
+	if value, found := c.Get(1); found {
+		fmt.Println("Found:", value) // Output: Found: orange
+	} else {
+		fmt.Println("Not found")
+	}
+
+	// Wait for the item to expire
+	time.Sleep(2 * time.Second)
+	if _, found := c.Get(1); !found {
+		fmt.Println("Item has expired") // Output: Item has expired
+	}
+}
+```
+
 ### Integer-Specific Caches
 
 For scenarios where you need to increment values stored in the cache, the library provides `WriteHeavyCacheInteger` and `ReadHeavyCacheInteger` for integer-like types.
@@ -207,6 +284,16 @@ Using `Lock` and `Unlock` directly allows you to control when the lock is held a
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, allowing concurrent reads.
 - **`Clear()`**: Removes all key-value pairs from the cache.
+
+### WriteHeavyCacheExpired
+
+- **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
+- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
+
+### ReadHeavyCacheExpired
+
+- **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
+- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
 
 ### WriteHeavyCacheInteger
 
