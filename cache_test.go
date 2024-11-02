@@ -1,9 +1,11 @@
 package cache_test
 
 import (
+	"fmt"
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/catatsuy/cache"
 )
@@ -430,4 +432,95 @@ func BenchmarkReadHeavyCacheInteger_ParallelIncr(b *testing.B) {
 		}
 		wg.Wait()
 	}
+}
+
+func TestLockManager(t *testing.T) {
+	lm := cache.NewLockManager[int]()
+
+	id := 1
+	lm.Lock(id)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		lm.Lock(id)
+		lm.Unlock(id)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	lm.Unlock(id)
+
+	wg.Wait()
+
+	id2 := 2
+	lm.Lock(id2)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(5 * time.Millisecond)
+		lm.Unlock(id2)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer lm.GetAndLock(id2).Unlock()
+	}()
+
+	wg.Wait()
+}
+
+// ExampleLockManager provides an example usage of LockManager.
+func ExampleLockManager() {
+	// Create a new LockManager for integer keys
+	lm := cache.NewLockManager[int]()
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	// Simulate concurrent access to the same key
+	key := 1
+
+	// First goroutine locks and performs some work
+	go func() {
+		defer wg.Done()
+		lm.Lock(key)
+		fmt.Println("Goroutine 1: Locked")
+		// Simulate some work
+		fmt.Println("Goroutine 1: Doing work")
+		lm.Unlock(key)
+		fmt.Println("Goroutine 1: Unlocked")
+	}()
+
+	go func() {
+		defer wg.Done()
+		time.Sleep(time.Millisecond)
+		defer lm.GetAndLock(key).Unlock()
+		fmt.Println("Goroutine 2: Locked")
+		// Simulate some work
+		fmt.Println("Goroutine 2: Doing work")
+		fmt.Println("Goroutine 2: Unlocked")
+	}()
+
+	lm.Lock(key)
+	fmt.Println("Locked")
+	// Simulate some work
+	fmt.Println("Doing work")
+	lm.Unlock(key)
+	fmt.Println("Unlocked")
+	wg.Done()
+
+	wg.Wait()
+
+	// Output:
+	// Locked
+	// Doing work
+	// Unlocked
+	// Goroutine 1: Locked
+	// Goroutine 1: Doing work
+	// Goroutine 1: Unlocked
+	// Goroutine 2: Locked
+	// Goroutine 2: Doing work
+	// Goroutine 2: Unlocked
 }
