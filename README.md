@@ -127,6 +127,73 @@ func main() {
 }
 ```
 
+### LockManager
+
+The `LockManager` is useful for managing distributed locks associated with unique keys, especially when multiple goroutines need synchronized access to specific resources. `LockManager` provides a convenient `GetAndLock` function, which retrieves and locks a mutex in one step.
+
+#### LockManager Example with `GetAndLock`
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/catatsuy/cache"
+	"time"
+)
+
+// Create a global LockManager instance
+var lm = cache.NewLockManager[int]()
+
+func main() {
+	// Simulate calling heavyOperation on a shared resource
+	heavyOperation(1)
+	heavyOperation(2)
+}
+
+func heavyOperation(id int) {
+	// Lock the resource with the specified key and defer unlocking
+	defer lm.GetAndLock(id).Unlock()
+
+	// Simulate a time-consuming process
+	fmt.Printf("Starting heavy operation on resource %d\n", id)
+	time.Sleep(2 * time.Second)
+	fmt.Printf("Completed heavy operation on resource %d\n", id)
+}
+```
+
+The `GetAndLock` function can be used with `defer` to ensure the mutex is automatically unlocked at the end of the function.
+
+#### LockManager Example with `Lock` and `Unlock`
+
+You can also explicitly call `Lock` and `Unlock` for more control over the locking process.
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	lm := cache.NewLockManager[int]()
+
+	// Lock the resource with a specific key
+	lm.Lock(1)
+	fmt.Println("Resource 1 is locked")
+
+	// Perform some work with the locked resource
+	fmt.Println("Resource 1 is being used")
+
+	// Unlock the resource
+	lm.Unlock(1)
+	fmt.Println("Resource 1 is unlocked")
+}
+```
+
+Using `Lock` and `Unlock` directly allows you to control when the lock is held and released, making it suitable for cases where `defer` might not be appropriate.
+
 ## API
 
 ### WriteHeavyCache
@@ -154,6 +221,13 @@ func main() {
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
 - **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
 - **`Clear()`**: Removes all key-value pairs from the cache.
+
+### LockManager
+
+- **`NewLockManager[K comparable]()`**: Creates a new instance of `LockManager`.
+- **`Lock(id K)`**: Locks the mutex associated with the given key.
+- **`Unlock(id K)`**: Unlocks the mutex associated with the given key.
+- **`GetAndLock(id K) *sync.Mutex`**: Retrieves and locks the mutex associated with the given key, returning the locked mutex. Useful with `defer` to automatically release the lock when the function exits.
 
 ## Acknowledgements
 
