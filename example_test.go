@@ -169,7 +169,7 @@ func ExampleLockManager() {
 }
 
 func ExampleSingleflightGroup() {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 
 	v, err := sf.Do("example_key", func() (string, error) {
 		return "result", nil

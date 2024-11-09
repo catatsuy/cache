@@ -18,9 +18,9 @@ import (
 //   - Immediate synchronous cleanup: In this implementation, the completed result is
 //     removed from the map asynchronously. In the official implementation, cleanup
 //     is handled synchronously within the doCall function to ensure immediate memory release.
-type SingleflightGroup[K comparable, V any] struct {
+type SingleflightGroup[V any] struct {
 	mu sync.Mutex
-	m  map[K]*call[V]
+	m  map[string]*call[V]
 }
 
 // call represents a single execution result for a specific key, holding the
@@ -34,9 +34,9 @@ type call[V any] struct {
 
 // NewSingleflightGroup creates a new instance of SingleflightGroup, initialized
 // with an empty map to store calls by key.
-func NewSingleflightGroup[K comparable, V any]() *SingleflightGroup[K, V] {
-	return &SingleflightGroup[K, V]{
-		m: make(map[K]*call[V]),
+func NewSingleflightGroup[V any]() *SingleflightGroup[V] {
+	return &SingleflightGroup[V]{
+		m: make(map[string]*call[V]),
 	}
 }
 
@@ -49,7 +49,7 @@ func NewSingleflightGroup[K comparable, V any]() *SingleflightGroup[K, V] {
 //
 // - Panic and Goexit handling
 // - Shared result flag to indicate if the result was reused for multiple callers
-func (sf *SingleflightGroup[K, V]) Do(key K, fn func() (V, error)) (V, error) {
+func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) {
 	// Lock to check if a call is already in progress for the given key
 	sf.mu.Lock()
 	var (

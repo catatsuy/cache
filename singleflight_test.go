@@ -11,7 +11,7 @@ import (
 )
 
 func TestDo(t *testing.T) {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 	v, err := sf.Do("key", func() (string, error) {
 		return "bar", nil
 	})
@@ -24,7 +24,7 @@ func TestDo(t *testing.T) {
 }
 
 func TestDoErr(t *testing.T) {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 	someErr := errors.New("Some error")
 	v, err := sf.Do("key", func() (string, error) {
 		return "", someErr
@@ -38,7 +38,7 @@ func TestDoErr(t *testing.T) {
 }
 
 func TestDoDupSuppress(t *testing.T) {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 	var wg1, wg2 sync.WaitGroup
 	c := make(chan string, 1)
 	var calls int32
@@ -85,7 +85,7 @@ func TestDoDupSuppress(t *testing.T) {
 }
 
 func TestDoTimeout(t *testing.T) {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 	start := time.Now()
 	v, err := sf.Do("key", func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
@@ -103,7 +103,7 @@ func TestDoTimeout(t *testing.T) {
 }
 
 func TestDoMultipleErrors(t *testing.T) {
-	sf := cache.NewSingleflightGroup[string, string]()
+	sf := cache.NewSingleflightGroup[string]()
 	var calls int32
 	someErr := errors.New("Some error")
 
