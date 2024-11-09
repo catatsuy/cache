@@ -271,6 +271,114 @@ func main() {
 
 Using `Lock` and `Unlock` directly allows you to control when the lock is held and released, making it suitable for cases where `defer` might not be appropriate.
 
+### SingleflightGroup
+
+`SingleflightGroup` ensures that only one function call happens at a time for a given key. If multiple calls are made with the same key, only the first one runs, while others wait and receive the same result. This is useful when you want to avoid running the same operation multiple times simultaneously.
+
+#### SingleflightGroup Example
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	sf := cache.NewSingleflightGroup[int, string]()
+
+	// Define a function to load data only if it's not already cached
+	loadData := func(key int) (string, error) {
+		// Simulate data fetching or updating
+		return fmt.Sprintf("Data for key %d", key), nil
+	}
+
+	// Use SingleflightGroup to ensure only one call for the same key at a time
+	value, err := sf.Do(1, func() (string, error) {
+		return loadData(1)
+	})
+
+	if err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Println("Result:", value) // Output: Result: Data for key 1
+	}
+}
+```
+
+#### SingleflightGroup and Caching Example
+
+This example demonstrates how to use `SingleflightGroup` with `WriteHeavyCache` to prevent duplicate data retrieval requests for the same key. When a key is requested multiple times simultaneously, `SingleflightGroup` ensures that only one retrieval function (`HeavyGet`) executes, while the other requests wait and receive the cached result once it completes.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"sync"
+	"time"
+
+	"github.com/catatsuy/cache"
+)
+
+// Global cache and singleflight group
+var (
+	c  = cache.NewWriteHeavyCache[int, int]()
+	sf = cache.NewSingleflightGroup[string, int]()
+)
+
+// Get retrieves a value from the cache or loads it with HeavyGet if not cached.
+// Singleflight ensures only one HeavyGet call per key at a time.
+func Get(key int) int {
+	// Attempt to retrieve the item from cache
+	if value, found := c.Get(key); found {
+		return value
+	}
+
+	// Use SingleflightGroup to prevent duplicate HeavyGet calls for the same key
+	v, err := sf.Do(fmt.Sprintf("cacheGet_%d", key), func() (int, error) {
+		// Load the data and store it in the cache
+		value := HeavyGet(key)
+		c.Set(key, value)
+		return value, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
+// HeavyGet simulates a time-consuming data retrieval operation.
+// Here, it sleeps for 1 second and returns twice the input key as the result.
+func HeavyGet(key int) int {
+	log.Printf("call HeavyGet %d\n", key)
+	time.Sleep(time.Second)
+	return key * 2
+}
+
+func main() {
+	// Simulate concurrent access to Get with keys 0 through 9, each key accessed 10 times
+	for i := 0; i < 100; i++ {
+		go func(i int) {
+			Get(i % 10)
+		}(i)
+	}
+
+	// Wait for all concurrent fetches to complete
+	time.Sleep(2 * time.Second)
+
+	// Print cached values for keys 0 through 9
+	for i := 0; i < 10; i++ {
+		log.Println(Get(i))
+	}
+}
+```
+
+This example shows how multiple simultaneous requests for the same key result in only a single call to `HeavyGet`, while other requests wait for the result. The results are then cached, preventing repeated retrievals for the same data.
+
 ## API
 
 ### WriteHeavyCache
@@ -315,6 +423,11 @@ Using `Lock` and `Unlock` directly allows you to control when the lock is held a
 - **`Lock(id K)`**: Locks the mutex associated with the given key.
 - **`Unlock(id K)`**: Unlocks the mutex associated with the given key.
 - **`GetAndLock(id K) *sync.Mutex`**: Retrieves and locks the mutex associated with the given key, returning the locked mutex. Useful with `defer` to automatically release the lock when the function exits.
+
+### SingleflightGroup
+
+- **`NewSingleflightGroup[K comparable, V any]()`**: Creates a new instance of `SingleflightGroup`.
+- **`Do(key K, fn func() (V, error)) (V, error)`**: Executes the provided function `fn` for the given key only if it is not already in progress for that key. If a duplicate request is made with the same key while the function is still running, the duplicate request waits and receives the same result when the function completes.
 
 ## Acknowledgements
 

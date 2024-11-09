@@ -167,3 +167,17 @@ func ExampleLockManager() {
 	// Goroutine 2: Doing work
 	// Goroutine 2: Unlocked
 }
+
+func ExampleSingleflightGroup() {
+	sf := cache.NewSingleflightGroup[string, string]()
+
+	v, err := sf.Do("example_key", func() (string, error) {
+		return "result", nil
+	})
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Value:", v)
+	// Output: Value: result
+}
