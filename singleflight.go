@@ -68,15 +68,15 @@ func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) 
 		// If fn has not been executed, run it and store the result
 		c.value, c.err = fn()
 		c.done = true
+
+		// Schedule the deletion of the completed call asynchronously
+		go func() {
+			sf.mu.Lock()
+			delete(sf.m, key)
+			sf.mu.Unlock()
+		}()
 	}
 	c.mu.Unlock()
-
-	// Schedule the deletion of the completed call asynchronously
-	go func() {
-		sf.mu.Lock()
-		delete(sf.m, key)
-		sf.mu.Unlock()
-	}()
 
 	return c.value, c.err
 }
