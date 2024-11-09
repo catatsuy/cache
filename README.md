@@ -282,21 +282,22 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/catatsuy/cache"
 )
 
 func main() {
-	sf := cache.NewSingleflightGroup[int, string]()
+	sf := cache.NewSingleflightGroup[string]()
 
 	// Define a function to load data only if it's not already cached
-	loadData := func(key int) (string, error) {
+	loadData := func(key string) (string, error) {
 		// Simulate data fetching or updating
-		return fmt.Sprintf("Data for key %d", key), nil
+		return fmt.Sprintf("Data for key %s", key), nil
 	}
 
 	// Use SingleflightGroup to ensure only one call for the same key at a time
-	value, err := sf.Do(1, func() (string, error) {
-		return loadData(1)
+	value, err := sf.Do("key", func() (string, error) {
+		return loadData("key")
 	})
 
 	if err != nil {
@@ -317,7 +318,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/catatsuy/cache"
@@ -326,7 +326,7 @@ import (
 // Global cache and singleflight group
 var (
 	c  = cache.NewWriteHeavyCache[int, int]()
-	sf = cache.NewSingleflightGroup[string, int]()
+	sf = cache.NewSingleflightGroup[int]()
 )
 
 // Get retrieves a value from the cache or loads it with HeavyGet if not cached.
@@ -426,8 +426,8 @@ This example shows how multiple simultaneous requests for the same key result in
 
 ### SingleflightGroup
 
-- **`NewSingleflightGroup[K comparable, V any]()`**: Creates a new instance of `SingleflightGroup`.
-- **`Do(key K, fn func() (V, error)) (V, error)`**: Executes the provided function `fn` for the given key only if it is not already in progress for that key. If a duplicate request is made with the same key while the function is still running, the duplicate request waits and receives the same result when the function completes.
+- **`NewSingleflightGroup[V any]()`**: Creates a new instance of `SingleflightGroup`.
+- **`Do(key string, fn func() (V, error)) (V, error)`**: Executes the provided function `fn` for the given key only if it is not already in progress for that key. If a duplicate request is made with the same key while the function is still running, the duplicate request waits and receives the same result when the function completes.
 
 ## Acknowledgements
 
