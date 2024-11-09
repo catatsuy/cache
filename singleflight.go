@@ -45,10 +45,9 @@ func NewSingleflightGroup[V any]() *SingleflightGroup[V] {
 // and return the same result. Once complete, the result is stored and used for
 // subsequent calls until it's removed from the map.
 //
-//	Unlike the official singleflight, this function does not provide:
-//
-// - Panic and Goexit handling
-// - Shared result flag to indicate if the result was reused for multiple callers
+// Unlike the official singleflight, this function does not provide:
+//   - Panic and Goexit handling
+//   - Shared result flag to indicate if the result was reused for multiple callers
 func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) {
 	// Lock to check if a call is already in progress for the given key
 	sf.mu.Lock()
