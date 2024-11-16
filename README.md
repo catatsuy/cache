@@ -1,13 +1,15 @@
 # Cache Library for Go
 
-This library provides two types of caches optimized for different usage patterns: **WriteHeavyCache** and **ReadHeavyCache**. Additionally, it supports caches specifically designed for integer-like types, offering flexibility for handling various data types.
+This library provides efficient caching solutions for different usage patterns, such as write-heavy or read-heavy scenarios. It also includes advanced features like a faster Singleflight implementation and easy-to-use locking.
 
 ## Features
 
-- **WriteHeavyCache**: Optimized for scenarios where write operations are frequent.
-- **ReadHeavyCache**: Optimized for scenarios where read operations are frequent.
-- Supports **generic types** for flexible key-value storage.
-- Specialized caches for **integer-like types** to support operations like increments.
+- **WriteHeavyCache**: Designed for cases where write operations are frequent.
+- **ReadHeavyCache**: Designed for cases where read operations are frequent.
+- **Generic Types Support**: Flexible key-value storage for many data types.
+- Specialized caches for **integer-like types**, allowing operations like increments.
+- **Faster Singleflight**: A custom implementation that is up to **2x faster** than the standard Singleflight. See detailed results and analysis in the [benchmark](/benchmark) directory.
+- **Simplified Locking**: An easy way to handle locks for concurrent operations.
 
 ## Documentation
 
