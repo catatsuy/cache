@@ -5,11 +5,15 @@ import (
 	"time"
 )
 
+// WriteHeavyCache is a cache optimized for write-heavy operations.
+// It uses a Mutex to synchronize access to the cache items.
 type WriteHeavyCache[K comparable, V any] struct {
 	sync.Mutex // WriteHeavyCache uses Mutex for all operations
 	items      map[K]V
 }
 
+// ReadHeavyCache is a cache optimized for read-heavy operations.
+// It uses an RWMutex to allow concurrent reads and synchronized writes.
 type ReadHeavyCache[K comparable, V any] struct {
 	sync.RWMutex // ReadHeavyCache allows concurrent read access with RWMutex
 	items        map[K]V
@@ -73,18 +77,21 @@ func NewReadHeavyCache[K comparable, V any]() *ReadHeavyCache[K, V] {
 	}
 }
 
+// expiredValue represents a cached value with an expiration time.
 type expiredValue[V any] struct {
 	value  V
 	expire time.Time
 }
 
-// WriteHeavyCacheExpired uses a Mutex for all operations
+// WriteHeavyCacheExpired is a cache optimized for write-heavy operations with expiration support.
+// It uses a Mutex to synchronize access and stores values with expiration times.
 type WriteHeavyCacheExpired[K comparable, V any] struct {
 	sync.Mutex
 	items map[K]expiredValue[V]
 }
 
-// ReadHeavyCacheExpired allows concurrent read access with RWMutex
+// ReadHeavyCacheExpired is a cache optimized for read-heavy operations with expiration support.
+// It uses an RWMutex to allow concurrent reads and synchronized writes, storing values with expiration times.
 type ReadHeavyCacheExpired[K comparable, V any] struct {
 	sync.RWMutex
 	items map[K]expiredValue[V]
@@ -146,7 +153,8 @@ func (c *ReadHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
 	return v.value, true
 }
 
-// WriteHeavyCacheInteger is a write-heavy cache for integer-like types
+// WriteHeavyCacheInteger is a cache optimized for write-heavy operations for integer-like types.
+// It uses a Mutex to synchronize access to the cache items.
 type WriteHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }] struct {
@@ -154,7 +162,8 @@ type WriteHeavyCacheInteger[K comparable, V interface {
 	items      map[K]V
 }
 
-// ReadHeavyCacheInteger is a read-heavy cache for integer-like types
+// ReadHeavyCacheInteger is a cache optimized for read-heavy operations for integer-like types.
+// It uses an RWMutex to allow concurrent reads and synchronized writes.
 type ReadHeavyCacheInteger[K comparable, V interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }] struct {
@@ -207,6 +216,7 @@ func (c *WriteHeavyCacheInteger[K, V]) Incr(key K, value V) {
 	c.Unlock()
 }
 
+// Clear removes all items from WriteHeavyCacheInteger.
 func (c *WriteHeavyCacheInteger[K, V]) Clear() {
 	c.Lock()
 	c.items = make(map[K]V)
@@ -240,6 +250,7 @@ func (c *ReadHeavyCacheInteger[K, V]) Incr(key K, value V) {
 	c.Unlock()
 }
 
+// Clear removes all items from ReadHeavyCacheExpired.
 func (c *ReadHeavyCacheInteger[K, V]) Clear() {
 	c.Lock()
 	c.items = make(map[K]V)
@@ -247,6 +258,7 @@ func (c *ReadHeavyCacheInteger[K, V]) Clear() {
 }
 
 // LockManager manages a set of mutexes identified by keys of type K.
+// It is designed to provide fine-grained locking for operations on individual keys.
 type LockManager[K comparable] struct {
 	mu    sync.Mutex
 	locks map[K]*sync.Mutex
