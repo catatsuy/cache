@@ -151,6 +151,13 @@ func (c *WriteHeavyCacheExpired[K, V]) Delete(key K) {
 	delete(c.items, key)
 }
 
+// Clear removes all items from WriteHeavyCache
+func (c *WriteHeavyCacheExpired[K, V]) Clear() {
+	c.Lock()
+	defer c.Unlock()
+	c.items = make(map[K]expiredValue[V])
+}
+
 // Set method for ReadHeavyCacheExpired with a specified expiration duration
 func (c *ReadHeavyCacheExpired[K, V]) Set(key K, value V, duration time.Duration) {
 	val := expiredValue[V]{
@@ -179,6 +186,13 @@ func (c *ReadHeavyCacheExpired[K, V]) Delete(key K) {
 	c.Lock() // Write lock is required for deletion.
 	defer c.Unlock()
 	delete(c.items, key)
+}
+
+// Clear removes all items from WriteHeavyCache
+func (c *ReadHeavyCacheExpired[K, V]) Clear() {
+	c.Lock()
+	defer c.Unlock()
+	c.items = make(map[K]expiredValue[V])
 }
 
 // WriteHeavyCacheInteger is a cache optimized for write-heavy operations for integer-like types.
