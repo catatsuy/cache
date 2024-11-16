@@ -20,6 +20,17 @@ func TestWriteHeavyCache_SetAndGet(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCache_Delete(t *testing.T) {
+	cache := cache.NewWriteHeavyCache[string, int]()
+	cache.Set("key1", 100)
+
+	// Delete the key and check if it's removed
+	cache.Delete("key1")
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be deleted")
+	}
+}
+
 func TestReadHeavyCache_SetAndGet(t *testing.T) {
 	cache := cache.NewReadHeavyCache[string, int]()
 	cache.Set("key1", 200)
@@ -43,6 +54,17 @@ func TestWriteHeavyCache_Clear(t *testing.T) {
 	}
 	if _, found := cache.Get("key2"); found {
 		t.Errorf("Expected key2 to be cleared")
+	}
+}
+
+func TestReadHeavyCache_Delete(t *testing.T) {
+	cache := cache.NewReadHeavyCache[string, int]()
+	cache.Set("key1", 200)
+
+	// Delete the key and check if it's removed
+	cache.Delete("key1")
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be deleted")
 	}
 }
 
@@ -72,6 +94,17 @@ func TestWriteHeavyCacheInteger_SetAndGet(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCacheExpired_Delete(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheExpired[string, string]()
+	cache.Set("key1", "value1", 10*time.Second)
+
+	// Delete the key and check if it's removed
+	cache.Delete("key1")
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be deleted")
+	}
+}
+
 func TestReadHeavyCacheInteger_SetAndGet(t *testing.T) {
 	cache := cache.NewReadHeavyCacheInteger[int, int]()
 	cache.Set(1, 400)
@@ -80,6 +113,17 @@ func TestReadHeavyCacheInteger_SetAndGet(t *testing.T) {
 		t.Errorf("Expected key 1 to be found")
 	} else if value != 400 {
 		t.Errorf("Expected value 400 for key 1, but got %d", value)
+	}
+}
+
+func TestReadHeavyCacheExpired_Delete(t *testing.T) {
+	cache := cache.NewReadHeavyCacheExpired[string, string]()
+	cache.Set("key1", "value1", 10*time.Second)
+
+	// Delete the key and check if it's removed
+	cache.Delete("key1")
+	if _, found := cache.Get("key1"); found {
+		t.Errorf("Expected key1 to be deleted")
 	}
 }
 
@@ -102,6 +146,17 @@ func TestWriteHeavyCacheInteger_Incr(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCacheInteger_Delete(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheInteger[int, int]()
+	cache.Set(1, 300)
+
+	// Delete the key and check if it's removed
+	cache.Delete(1)
+	if _, found := cache.Get(1); found {
+		t.Errorf("Expected key 1 to be deleted")
+	}
+}
+
 func TestReadHeavyCacheInteger_Incr(t *testing.T) {
 	cache := cache.NewReadHeavyCacheInteger[int, int]()
 	cache.Incr(1, 20) // Key doesn't exist, should set to 20
@@ -118,6 +173,17 @@ func TestReadHeavyCacheInteger_Incr(t *testing.T) {
 		t.Errorf("Expected key 1 to be found")
 	} else if value != 30 {
 		t.Errorf("Expected value 30 for key 1, but got %d", value)
+	}
+}
+
+func TestReadHeavyCacheInteger_Delete(t *testing.T) {
+	cache := cache.NewReadHeavyCacheInteger[int, int]()
+	cache.Set(1, 400)
+
+	// Delete the key and check if it's removed
+	cache.Delete(1)
+	if _, found := cache.Get(1); found {
+		t.Errorf("Expected key 1 to be deleted")
 	}
 }
 
