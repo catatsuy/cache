@@ -34,6 +34,13 @@ func (c *WriteHeavyCache[K, V]) Get(key K) (V, bool) {
 	return v, found
 }
 
+// Delete removes a key from WriteHeavyCache.
+func (c *WriteHeavyCache[K, V]) Delete(key K) {
+	c.Lock()
+	delete(c.items, key)
+	c.Unlock()
+}
+
 // Clear removes all items from WriteHeavyCache
 func (c *WriteHeavyCache[K, V]) Clear() {
 	c.Lock()
@@ -54,6 +61,13 @@ func (c *ReadHeavyCache[K, V]) Get(key K) (V, bool) {
 	v, found := c.items[key]
 	c.RUnlock()
 	return v, found
+}
+
+// Delete removes a key from ReadHeavyCache.
+func (c *ReadHeavyCache[K, V]) Delete(key K) {
+	c.Lock()
+	delete(c.items, key)
+	c.Unlock()
 }
 
 // Clear removes all items from ReadHeavyCache
@@ -130,6 +144,13 @@ func (c *WriteHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
 	return v.value, true
 }
 
+// Delete removes a key from WriteHeavyCacheExpired.
+func (c *WriteHeavyCacheExpired[K, V]) Delete(key K) {
+	c.Lock()
+	defer c.Unlock()
+	delete(c.items, key)
+}
+
 // Set method for ReadHeavyCacheExpired with a specified expiration duration
 func (c *ReadHeavyCacheExpired[K, V]) Set(key K, value V, duration time.Duration) {
 	val := expiredValue[V]{
@@ -151,6 +172,13 @@ func (c *ReadHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
 		return zero, false
 	}
 	return v.value, true
+}
+
+// Delete removes a key from ReadHeavyCacheExpired.
+func (c *ReadHeavyCacheExpired[K, V]) Delete(key K) {
+	c.Lock() // Write lock is required for deletion.
+	defer c.Unlock()
+	delete(c.items, key)
 }
 
 // WriteHeavyCacheInteger is a cache optimized for write-heavy operations for integer-like types.
@@ -216,6 +244,13 @@ func (c *WriteHeavyCacheInteger[K, V]) Incr(key K, value V) {
 	c.Unlock()
 }
 
+// Delete removes a key from WriteHeavyCacheInteger.
+func (c *WriteHeavyCacheInteger[K, V]) Delete(key K) {
+	c.Lock()
+	defer c.Unlock()
+	delete(c.items, key)
+}
+
 // Clear removes all items from WriteHeavyCacheInteger.
 func (c *WriteHeavyCacheInteger[K, V]) Clear() {
 	c.Lock()
@@ -248,6 +283,13 @@ func (c *ReadHeavyCacheInteger[K, V]) Incr(key K, value V) {
 		c.items[key] = value
 	}
 	c.Unlock()
+}
+
+// Delete removes a key from ReadHeavyCacheInteger.
+func (c *ReadHeavyCacheInteger[K, V]) Delete(key K) {
+	c.Lock() // Write lock is required for deletion.
+	defer c.Unlock()
+	delete(c.items, key)
 }
 
 // Clear removes all items from ReadHeavyCacheExpired.
