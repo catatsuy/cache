@@ -387,29 +387,36 @@ This example shows how multiple simultaneous requests for the same key result in
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, returning a boolean indicating whether the key exists.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
 - **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### ReadHeavyCache
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, allowing concurrent reads.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
 - **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### WriteHeavyCacheExpired
 
 - **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### ReadHeavyCacheExpired
 
 - **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
+- **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### WriteHeavyCacheInteger
 
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
 - **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
 - **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### ReadHeavyCacheInteger
@@ -417,6 +424,7 @@ This example shows how multiple simultaneous requests for the same key result in
 - **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
 - **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
 - **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
+- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
 - **`Clear()`**: Removes all key-value pairs from the cache.
 
 ### LockManager
