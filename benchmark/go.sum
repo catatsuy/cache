@@ -1,0 +1,6 @@
+github.com/catatsuy/cache v0.1.3 h1:GzoMCZXguJnQ39/j/ISuVVAyWLX4n/Jp8MxYkDJhf3Y=
+github.com/catatsuy/cache v0.1.3/go.mod h1:Ppaed4sPVG6q25/vLaj1B2ZG6VRh1XbGI+Gx1v5//2U=
+github.com/catatsuy/sync v0.0.1 h1:xIRkpBV3+q2oV6HahIEU3dOVjx3dfZDQfRMN4wG98Xs=
+github.com/catatsuy/sync v0.0.1/go.mod h1:y380VTE1YaSjcQW0jav0Yas3RPefPbxVxRMAVO526w0=
+golang.org/x/sync v0.9.0 h1:fEo0HyrW1GIgZdpbhCRO0PkJajUS5H9IFUztCgEo2jQ=
+golang.org/x/sync v0.9.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
