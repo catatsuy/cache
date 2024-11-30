@@ -341,6 +341,182 @@ func TestReadHeavyCacheExpired_SetAndGet(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCache_GetItems(t *testing.T) {
+	cache := cache.NewWriteHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	items := cache.GetItems()
+
+	if len(items) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(items))
+	}
+
+	if items["key1"] != 100 || items["key2"] != 200 {
+		t.Errorf("Items do not match expected values")
+	}
+}
+
+func TestWriteHeavyCache_SetItems(t *testing.T) {
+	cache := cache.NewWriteHeavyCache[string, int]()
+	cache.SetItems(map[string]int{
+		"key1": 300,
+		"key2": 400,
+	})
+
+	value1, found1 := cache.Get("key1")
+	if !found1 || value1 != 300 {
+		t.Errorf("Expected key1 to have value 300, got %v", value1)
+	}
+
+	value2, found2 := cache.Get("key2")
+	if !found2 || value2 != 400 {
+		t.Errorf("Expected key2 to have value 400, got %v", value2)
+	}
+}
+
+func TestWriteHeavyCache_Size(t *testing.T) {
+	cache := cache.NewWriteHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	if size := cache.Size(); size != 2 {
+		t.Errorf("Expected size 2, got %d", size)
+	}
+}
+
+func TestReadHeavyCache_GetItems(t *testing.T) {
+	cache := cache.NewReadHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	items := cache.GetItems()
+
+	if len(items) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(items))
+	}
+
+	if items["key1"] != 100 || items["key2"] != 200 {
+		t.Errorf("Items do not match expected values")
+	}
+}
+
+func TestReadHeavyCache_SetItems(t *testing.T) {
+	cache := cache.NewReadHeavyCache[string, int]()
+	cache.SetItems(map[string]int{
+		"key1": 300,
+		"key2": 400,
+	})
+
+	value1, found1 := cache.Get("key1")
+	if !found1 || value1 != 300 {
+		t.Errorf("Expected key1 to have value 300, got %v", value1)
+	}
+
+	value2, found2 := cache.Get("key2")
+	if !found2 || value2 != 400 {
+		t.Errorf("Expected key2 to have value 400, got %v", value2)
+	}
+}
+
+func TestReadHeavyCache_Size(t *testing.T) {
+	cache := cache.NewReadHeavyCache[string, int]()
+	cache.Set("key1", 100)
+	cache.Set("key2", 200)
+
+	if size := cache.Size(); size != 2 {
+		t.Errorf("Expected size 2, got %d", size)
+	}
+}
+
+func TestWriteHeavyCacheInteger_GetItems(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheInteger[int, int]()
+	cache.Set(1, 100)
+	cache.Set(2, 200)
+
+	items := cache.GetItems()
+
+	if len(items) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(items))
+	}
+
+	if items[1] != 100 || items[2] != 200 {
+		t.Errorf("Items do not match expected values")
+	}
+}
+
+func TestWriteHeavyCacheInteger_SetItems(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheInteger[int, int]()
+	cache.SetItems(map[int]int{
+		1: 300,
+		2: 400,
+	})
+
+	value1, found1 := cache.Get(1)
+	if !found1 || value1 != 300 {
+		t.Errorf("Expected key 1 to have value 300, got %v", value1)
+	}
+
+	value2, found2 := cache.Get(2)
+	if !found2 || value2 != 400 {
+		t.Errorf("Expected key 2 to have value 400, got %v", value2)
+	}
+}
+
+func TestWriteHeavyCacheInteger_Size(t *testing.T) {
+	cache := cache.NewWriteHeavyCacheInteger[int, int]()
+	cache.Set(1, 100)
+	cache.Set(2, 200)
+
+	if size := cache.Size(); size != 2 {
+		t.Errorf("Expected size 2, got %d", size)
+	}
+}
+
+func TestReadHeavyCacheInteger_GetItems(t *testing.T) {
+	cache := cache.NewReadHeavyCacheInteger[int, int]()
+	cache.Set(1, 100)
+	cache.Set(2, 200)
+
+	items := cache.GetItems()
+
+	if len(items) != 2 {
+		t.Errorf("Expected 2 items, got %d", len(items))
+	}
+
+	if items[1] != 100 || items[2] != 200 {
+		t.Errorf("Items do not match expected values")
+	}
+}
+
+func TestReadHeavyCacheInteger_SetItems(t *testing.T) {
+	cache := cache.NewReadHeavyCacheInteger[int, int]()
+	cache.SetItems(map[int]int{
+		1: 300,
+		2: 400,
+	})
+
+	value1, found1 := cache.Get(1)
+	if !found1 || value1 != 300 {
+		t.Errorf("Expected key 1 to have value 300, got %v", value1)
+	}
+
+	value2, found2 := cache.Get(2)
+	if !found2 || value2 != 400 {
+		t.Errorf("Expected key 2 to have value 400, got %v", value2)
+	}
+}
+
+func TestReadHeavyCacheInteger_Size(t *testing.T) {
+	cache := cache.NewReadHeavyCacheInteger[int, int]()
+	cache.Set(1, 100)
+	cache.Set(2, 200)
+
+	if size := cache.Size(); size != 2 {
+		t.Errorf("Expected size 2, got %d", size)
+	}
+}
+
 // Benchmark for WriteHeavyCache's Set method
 func BenchmarkWriteHeavyCache_Set(b *testing.B) {
 	cache := cache.NewWriteHeavyCache[int, int]()

@@ -23,6 +23,43 @@ func ExampleWriteHeavyCache() {
 	// Output: Found: apple
 }
 
+// Example for WriteHeavyCache GetItems
+func ExampleWriteHeavyCache_GetItems() {
+	c := cache.NewWriteHeavyCache[int, string]()
+
+	c.Set(1, "apple")
+	c.Set(2, "banana")
+
+	items := c.GetItems()
+	fmt.Println("Items:", items)
+	// Output: Items: map[1:apple 2:banana]
+}
+
+// Example for WriteHeavyCache SetItems
+func ExampleWriteHeavyCache_SetItems() {
+	c := cache.NewWriteHeavyCache[int, string]()
+
+	c.SetItems(map[int]string{
+		1: "grape",
+		2: "cherry",
+	})
+
+	items := c.GetItems()
+	fmt.Println("Items after SetItems:", items)
+	// Output: Items after SetItems: map[1:grape 2:cherry]
+}
+
+// Example for WriteHeavyCache Size
+func ExampleWriteHeavyCache_Size() {
+	c := cache.NewWriteHeavyCache[int, string]()
+
+	c.Set(1, "apple")
+	c.Set(2, "banana")
+
+	fmt.Println("Size:", c.Size())
+	// Output: Size: 2
+}
+
 // Example for ReadHeavyCache
 func ExampleReadHeavyCache() {
 	c := cache.NewReadHeavyCache[int, string]()
@@ -36,6 +73,43 @@ func ExampleReadHeavyCache() {
 		fmt.Println("Not found")
 	}
 	// Output: Found: orange
+}
+
+// Example for ReadHeavyCache GetItems
+func ExampleReadHeavyCache_GetItems() {
+	c := cache.NewReadHeavyCache[int, string]()
+
+	c.Set(1, "orange")
+	c.Set(2, "lemon")
+
+	items := c.GetItems()
+	fmt.Println("Items:", items)
+	// Output: Items: map[1:orange 2:lemon]
+}
+
+// Example for ReadHeavyCache SetItems
+func ExampleReadHeavyCache_SetItems() {
+	c := cache.NewReadHeavyCache[int, string]()
+
+	c.SetItems(map[int]string{
+		1: "peach",
+		2: "plum",
+	})
+
+	items := c.GetItems()
+	fmt.Println("Items after SetItems:", items)
+	// Output: Items after SetItems: map[1:peach 2:plum]
+}
+
+// Example for ReadHeavyCache Size
+func ExampleReadHeavyCache_Size() {
+	c := cache.NewReadHeavyCache[int, string]()
+
+	c.Set(1, "orange")
+	c.Set(2, "lemon")
+
+	fmt.Println("Size:", c.Size())
+	// Output: Size: 2
 }
 
 // Example for WriteHeavyCacheExpired
