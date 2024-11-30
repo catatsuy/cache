@@ -48,6 +48,33 @@ func (c *WriteHeavyCache[K, V]) Clear() {
 	c.Unlock()
 }
 
+// GetItems returns a direct reference to the internal map of cache items.
+// WARNING: This method does not create a copy of the map.
+// Concurrent modifications to the returned map may cause race conditions
+// and undefined behavior. Use this method with caution in concurrent environments.
+func (c *WriteHeavyCache[K, V]) GetItems() map[K]V {
+	c.Lock()
+	defer c.Unlock()
+	return c.items
+}
+
+// SetItems replaces the internal map of cache items with the provided map.
+// WARNING: This method does not copy the provided map.
+// Ensure that no concurrent access is occurring while calling this method
+// to avoid race conditions and undefined behavior.
+func (c *WriteHeavyCache[K, V]) SetItems(items map[K]V) {
+	c.Lock()
+	defer c.Unlock()
+	c.items = items
+}
+
+// Size returns the number of items currently in the cache.
+func (c *WriteHeavyCache[K, V]) Size() int {
+	c.Lock()
+	defer c.Unlock()
+	return len(c.items)
+}
+
 // Set sets a value in ReadHeavyCache, locking for the write operation
 func (c *ReadHeavyCache[K, V]) Set(key K, value V) {
 	c.Lock()
@@ -75,6 +102,33 @@ func (c *ReadHeavyCache[K, V]) Clear() {
 	c.Lock()
 	c.items = make(map[K]V)
 	c.Unlock()
+}
+
+// GetItems returns a direct reference to the internal map of cache items.
+// WARNING: This method does not create a copy of the map.
+// Concurrent modifications to the returned map may cause race conditions
+// and undefined behavior. Use this method with caution in concurrent environments.
+func (c *ReadHeavyCache[K, V]) GetItems() map[K]V {
+	c.RLock()
+	defer c.RUnlock()
+	return c.items
+}
+
+// SetItems replaces the internal map of cache items with the provided map.
+// WARNING: This method does not copy the provided map.
+// Ensure that no concurrent access is occurring while calling this method
+// to avoid race conditions and undefined behavior.
+func (c *ReadHeavyCache[K, V]) SetItems(items map[K]V) {
+	c.Lock()
+	defer c.Unlock()
+	c.items = items
+}
+
+// Size returns the number of items currently in the cache.
+func (c *ReadHeavyCache[K, V]) Size() int {
+	c.RLock()
+	defer c.RUnlock()
+	return len(c.items)
 }
 
 // NewWriteHeavyCache creates a new instance of WriteHeavyCache
@@ -272,6 +326,33 @@ func (c *WriteHeavyCacheInteger[K, V]) Clear() {
 	c.Unlock()
 }
 
+// GetItems returns a direct reference to the internal map of cache items.
+// WARNING: This method does not create a copy of the map.
+// Concurrent modifications to the returned map may cause race conditions
+// and undefined behavior. Use this method with caution in concurrent environments.
+func (c *WriteHeavyCacheInteger[K, V]) GetItems() map[K]V {
+	c.Lock()
+	defer c.Unlock()
+	return c.items
+}
+
+// SetItems replaces the internal map of cache items with the provided map.
+// WARNING: This method does not copy the provided map.
+// Ensure that no concurrent access is occurring while calling this method
+// to avoid race conditions and undefined behavior.
+func (c *WriteHeavyCacheInteger[K, V]) SetItems(items map[K]V) {
+	c.Lock()
+	defer c.Unlock()
+	c.items = items
+}
+
+// Size returns the number of items currently in the cache.
+func (c *WriteHeavyCacheInteger[K, V]) Size() int {
+	c.Lock()
+	defer c.Unlock()
+	return len(c.items)
+}
+
 // Set sets a value in ReadHeavyCacheInteger, locking for the write operation
 func (c *ReadHeavyCacheInteger[K, V]) Set(key K, value V) {
 	c.Lock()
@@ -311,6 +392,33 @@ func (c *ReadHeavyCacheInteger[K, V]) Clear() {
 	c.Lock()
 	c.items = make(map[K]V)
 	c.Unlock()
+}
+
+// GetItems returns a direct reference to the internal map of cache items.
+// WARNING: This method does not create a copy of the map.
+// Concurrent modifications to the returned map may cause race conditions
+// and undefined behavior. Use this method with caution in concurrent environments.
+func (c *ReadHeavyCacheInteger[K, V]) GetItems() map[K]V {
+	c.RLock()
+	defer c.RUnlock()
+	return c.items
+}
+
+// SetItems replaces the internal map of cache items with the provided map.
+// WARNING: This method does not copy the provided map.
+// Ensure that no concurrent access is occurring while calling this method
+// to avoid race conditions and undefined behavior.
+func (c *ReadHeavyCacheInteger[K, V]) SetItems(items map[K]V) {
+	c.Lock()
+	defer c.Unlock()
+	c.items = items
+}
+
+// Size returns the number of items currently in the cache.
+func (c *ReadHeavyCacheInteger[K, V]) Size() int {
+	c.RLock()
+	defer c.RUnlock()
+	return len(c.items)
 }
 
 // LockManager manages a set of mutexes identified by keys of type K.

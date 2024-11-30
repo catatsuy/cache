@@ -1,25 +1,33 @@
 # Cache Library for Go
 
-This library provides efficient caching solutions for different usage patterns, such as write-heavy or read-heavy scenarios. It also includes advanced features like a faster Singleflight implementation and easy-to-use locking.
+This library provides efficient caching solutions for various usage patterns, such as write-heavy or read-heavy scenarios, and advanced features like expiration handling, integer-specific operations, and easy-to-use locking.
 
 ## Features
 
-- **WriteHeavyCache**: Designed for cases where write operations are frequent.
-- **ReadHeavyCache**: Designed for cases where read operations are frequent.
-- **Generic Types Support**: Flexible key-value storage for many data types.
-- Specialized caches for **integer-like types**, allowing operations like increments.
-- **Faster Singleflight**: A custom implementation that is up to **2x faster** than the standard Singleflight. See detailed results and analysis in the [benchmark](/benchmark) directory.
-- **Simplified Locking**: An easy way to handle locks for concurrent operations.
+- **WriteHeavyCache**: Optimized for frequent write operations.
+- **ReadHeavyCache**: Optimized for frequent read operations.
+- **Expiration Support**: Built-in expiration for cache entries in `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired`.
+- **Integer-Specific Caches**: Specialized caches (`WriteHeavyCacheInteger` and `ReadHeavyCacheInteger`) with increment operations.
+- **Faster Singleflight**: A custom implementation that is up to **2x faster** than the standard Singleflight. See detailed results in the [benchmark](/benchmark) directory.
+- **LockManager**: Simplified locking for managing concurrency in your applications.
 
 ## Documentation
 
 For full API documentation, visit [pkg.go.dev](https://pkg.go.dev/github.com/catatsuy/cache).
 
+## Installation
+
+Install the library using `go get`:
+
+```sh
+go get github.com/catatsuy/cache
+```
+
 ## Usage
 
 ### WriteHeavyCache
 
-The `WriteHeavyCache` uses a `sync.Mutex` to lock for both read and write operations, making it suitable for cases where writing to the cache is frequent.
+The `WriteHeavyCache` uses a `sync.Mutex` to lock for both read and write operations. This makes it suitable for scenarios with frequent writes.
 
 ```go
 package main
@@ -37,16 +45,27 @@ func main() {
 	value, found := c.Get(1)
 
 	if found {
-		fmt.Println("Found:", value)
+		fmt.Println("Found:", value) // Output: Found: apple
 	} else {
 		fmt.Println("Not found")
 	}
+
+	// GetItems example
+	items := c.GetItems()
+	fmt.Println("Items:", items) // Output: Items: map[1:apple]
+
+	// SetItems example
+	c.SetItems(map[int]string{2: "banana", 3: "cherry"})
+	fmt.Println("Items after SetItems:", c.GetItems()) // Output: Items after SetItems: map[2:banana 3:cherry]
+
+	// Size example
+	fmt.Println("Size:", c.Size()) // Output: Size: 2
 }
 ```
 
 ### ReadHeavyCache
 
-The `ReadHeavyCache` uses a `sync.RWMutex`, allowing multiple concurrent readers while locking only for write operations. This is ideal for read-heavy workloads.
+The `ReadHeavyCache` uses a `sync.RWMutex`, allowing multiple readers while locking only for writes. This makes it ideal for read-heavy scenarios.
 
 ```go
 package main
@@ -64,23 +83,29 @@ func main() {
 	value, found := c.Get(1)
 
 	if found {
-		fmt.Println("Found:", value)
+		fmt.Println("Found:", value) // Output: Found: orange
 	} else {
 		fmt.Println("Not found")
 	}
+
+	// GetItems example
+	items := c.GetItems()
+	fmt.Println("Items:", items) // Output: Items: map[1:orange]
+
+	// SetItems example
+	c.SetItems(map[int]string{2: "peach", 3: "plum"})
+	fmt.Println("Items after SetItems:", c.GetItems()) // Output: Items after SetItems: map[2:peach 3:plum]
+
+	// Size example
+	fmt.Println("Size:", c.Size()) // Output: Size: 2
 }
 ```
 
-### WriteHeavyCacheExpired and ReadHeavyCacheExpired
+### Expiration Support
 
-The `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired` caches provide expiration functionality for stored items. You can specify an expiration duration for each item, after which it will no longer be accessible.
-
-- **WriteHeavyCacheExpired**: Optimized for write-heavy scenarios, using `sync.Mutex` for all operations.
-- **ReadHeavyCacheExpired**: Optimized for read-heavy scenarios, using `sync.RWMutex` to allow multiple readers concurrently while still locking for writes.
+The `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired` caches provide expiration functionality, allowing you to specify a duration for each cache entry.
 
 #### WriteHeavyCacheExpired Example
-
-The `WriteHeavyCacheExpired` cache is designed for situations where write operations are more frequent.
 
 ```go
 package main
@@ -95,27 +120,16 @@ import (
 func main() {
 	c := cache.NewWriteHeavyCacheExpired[int, string]()
 
-	// Set an item with a 1-second expiration
 	c.Set(1, "apple", 1*time.Second)
+	fmt.Println("Before expiration:", c.Get(1)) // Output: Found: apple
 
-	// Retrieve the item immediately
-	if value, found := c.Get(1); found {
-		fmt.Println("Found:", value) // Output: Found: apple
-	} else {
-		fmt.Println("Not found")
-	}
-
-	// Wait for the item to expire
 	time.Sleep(2 * time.Second)
-	if _, found := c.Get(1); !found {
-		fmt.Println("Item has expired") // Output: Item has expired
-	}
+	_, found := c.Get(1)
+	fmt.Println("After expiration:", found) // Output: After expiration: false
 }
 ```
 
 #### ReadHeavyCacheExpired Example
-
-The `ReadHeavyCacheExpired` cache is designed for scenarios where read operations are more frequent than writes.
 
 ```go
 package main
@@ -130,27 +144,18 @@ import (
 func main() {
 	c := cache.NewReadHeavyCacheExpired[int, string]()
 
-	// Set an item with a 1-second expiration
 	c.Set(1, "orange", 1*time.Second)
+	fmt.Println("Before expiration:", c.Get(1)) // Output: Found: orange
 
-	// Retrieve the item immediately
-	if value, found := c.Get(1); found {
-		fmt.Println("Found:", value) // Output: Found: orange
-	} else {
-		fmt.Println("Not found")
-	}
-
-	// Wait for the item to expire
 	time.Sleep(2 * time.Second)
-	if _, found := c.Get(1); !found {
-		fmt.Println("Item has expired") // Output: Item has expired
-	}
+	_, found := c.Get(1)
+	fmt.Println("After expiration:", found) // Output: After expiration: false
 }
 ```
 
 ### Integer-Specific Caches
 
-For scenarios where you need to increment values stored in the cache, the library provides `WriteHeavyCacheInteger` and `ReadHeavyCacheInteger` for integer-like types.
+For scenarios where increment operations are common, `WriteHeavyCacheInteger` and `ReadHeavyCacheInteger` are available.
 
 #### WriteHeavyCacheInteger Example
 
@@ -167,15 +172,10 @@ func main() {
 	c := cache.NewWriteHeavyCacheInteger[int, int]()
 
 	c.Set(1, 100)
-	c.Incr(1, 10) // Increment the value by 10
+	c.Incr(1, 10)
 
-	value, found := c.Get(1)
-
-	if found {
-		fmt.Println("New Value:", value) // Output: New Value: 110
-	} else {
-		fmt.Println("Not found")
-	}
+	value, _ := c.Get(1)
+	fmt.Println("Incremented Value:", value) // Output: Incremented Value: 110
 }
 ```
 
@@ -194,84 +194,41 @@ func main() {
 	c := cache.NewReadHeavyCacheInteger[int, int]()
 
 	c.Set(1, 50)
-	c.Incr(1, 5) // Increment the value by 5
+	c.Incr(1, 5)
 
-	value, found := c.Get(1)
-
-	if found {
-		fmt.Println("New Value:", value) // Output: New Value: 55
-	} else {
-		fmt.Println("Not found")
-	}
+	value, _ := c.Get(1)
+	fmt.Println("Incremented Value:", value) // Output: Incremented Value: 55
 }
 ```
 
 ### LockManager
 
-The `LockManager` is useful for managing distributed locks associated with unique keys, especially when multiple goroutines need synchronized access to specific resources. `LockManager` provides a convenient `GetAndLock` function, which retrieves and locks a mutex in one step.
-
-#### LockManager Example with `GetAndLock`
+The `LockManager` is designed for managing locks associated with unique keys.
 
 ```go
 package main
 
 import (
 	"fmt"
-	"github.com/catatsuy/cache"
 	"time"
-)
 
-// Create a global LockManager instance
-var lm = cache.NewLockManager[int]()
-
-func main() {
-	// Simulate calling heavyOperation on a shared resource
-	heavyOperation(1)
-	heavyOperation(2)
-}
-
-func heavyOperation(id int) {
-	// Lock the resource with the specified key and defer unlocking
-	defer lm.GetAndLock(id).Unlock()
-
-	// Simulate a time-consuming process
-	fmt.Printf("Starting heavy operation on resource %d\n", id)
-	time.Sleep(2 * time.Second)
-	fmt.Printf("Completed heavy operation on resource %d\n", id)
-}
-```
-
-The `GetAndLock` function can be used with `defer` to ensure the mutex is automatically unlocked at the end of the function.
-
-#### LockManager Example with `Lock` and `Unlock`
-
-You can also explicitly call `Lock` and `Unlock` for more control over the locking process.
-
-```go
-package main
-
-import (
-	"fmt"
 	"github.com/catatsuy/cache"
 )
 
 func main() {
 	lm := cache.NewLockManager[int]()
 
-	// Lock the resource with a specific key
 	lm.Lock(1)
-	fmt.Println("Resource 1 is locked")
+	go func() {
+		defer lm.GetAndLock(1).Unlock()
+		fmt.Println("Goroutine locked and released")
+	}()
 
-	// Perform some work with the locked resource
-	fmt.Println("Resource 1 is being used")
-
-	// Unlock the resource
+	time.Sleep(1 * time.Second)
 	lm.Unlock(1)
-	fmt.Println("Resource 1 is unlocked")
+	fmt.Println("Main goroutine released lock")
 }
 ```
-
-Using `Lock` and `Unlock` directly allows you to control when the lock is held and released, making it suitable for cases where `defer` might not be appropriate.
 
 ### SingleflightGroup
 
@@ -380,65 +337,3 @@ func main() {
 ```
 
 This example shows how multiple simultaneous requests for the same key result in only a single call to `HeavyGet`, while other requests wait for the result. The results are then cached, preventing repeated retrievals for the same data.
-
-## API
-
-### WriteHeavyCache
-
-- **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, returning a boolean indicating whether the key exists.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### ReadHeavyCache
-
-- **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key, allowing concurrent reads.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### WriteHeavyCacheExpired
-
-- **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### ReadHeavyCacheExpired
-
-- **`Set(key K, value V, duration time.Duration)`**: Stores the given key-value pair in the cache with an expiration duration.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key if it exists and is not expired. Returns a boolean indicating whether the key is still valid.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### WriteHeavyCacheInteger
-
-- **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
-- **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### ReadHeavyCacheInteger
-
-- **`Set(key K, value V)`**: Stores the given key-value pair in the cache.
-- **`Get(key K) (V, bool)`**: Retrieves the value associated with the key.
-- **`Incr(key K, value V)`**: Increments the value by the given amount. If the key does not exist, it sets the value.
-- **`Delete(key K)`**: Removes the key-value pair associated with the given key from the cache.
-- **`Clear()`**: Removes all key-value pairs from the cache.
-
-### LockManager
-
-- **`NewLockManager[K comparable]()`**: Creates a new instance of `LockManager`.
-- **`Lock(id K)`**: Locks the mutex associated with the given key.
-- **`Unlock(id K)`**: Unlocks the mutex associated with the given key.
-- **`GetAndLock(id K) *sync.Mutex`**: Retrieves and locks the mutex associated with the given key, returning the locked mutex. Useful with `defer` to automatically release the lock when the function exits.
-
-### SingleflightGroup
-
-- **`NewSingleflightGroup[V any]()`**: Creates a new instance of `SingleflightGroup`.
-- **`Do(key string, fn func() (V, error)) (V, error)`**: Executes the provided function `fn` for the given key only if it is not already in progress for that key. If a duplicate request is made with the same key while the function is still running, the duplicate request waits and receives the same result when the function completes.
-
-## Acknowledgements
-
-This library makes use of Go's powerful concurrency mechanisms (`sync.Mutex` and `sync.RWMutex`) to achieve thread-safe caching for various scenarios.
