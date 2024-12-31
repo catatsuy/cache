@@ -8,6 +8,7 @@ This library provides efficient caching solutions for various usage patterns, su
 - **ReadHeavyCache**: Optimized for frequent read operations.
 - **Expiration Support**: Built-in expiration for cache entries in `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired`.
 - **Integer-Specific Caches**: Specialized caches (`WriteHeavyCacheInteger` and `ReadHeavyCacheInteger`) with increment operations.
+- **RollingCache**: A dynamically growing slice-based cache with efficient `Append` and `Rotate` operations, suitable for maintaining ordered sequences of elements.
 - **Faster Singleflight**: A custom implementation that is up to **2x faster** than the standard Singleflight. See detailed results in the [benchmark](/benchmark) directory.
 - **LockManager**: Simplified locking for managing concurrency in your applications.
 
@@ -227,6 +228,43 @@ func main() {
 	time.Sleep(1 * time.Second)
 	lm.Unlock(1)
 	fmt.Println("Main goroutine released lock")
+}
+```
+
+### RollingCache
+
+The `RollingCache` provides a simple, dynamically growing cache for ordered elements. It supports appending new items and rotating the cache, which resets its contents while returning the previous state.
+
+#### Example
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	// Create a RollingCache with an initial capacity of 10
+	c := cache.NewRollingCache[int](10)
+	c.Append(1)
+	c.Append(2)
+	c.Append(3)
+
+	// Get the current items
+	fmt.Println("Current items:", c.GetItems()) // Output: Current items: [1 2 3]
+
+	// Check the size of the cache
+	fmt.Println("Current size:", c.Size()) // Output: Current size: 3
+
+	// Rotate the cache and get the rotated items
+	rotated := c.Rotate()
+	fmt.Println("Rotated items:", rotated) // Output: Rotated items: [1 2 3]
+
+	// The cache should now be empty
+	fmt.Println("Items after rotation:", c.GetItems()) // Output: Items after rotation: []
 }
 ```
 
