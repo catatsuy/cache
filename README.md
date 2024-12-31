@@ -202,40 +202,9 @@ func main() {
 }
 ```
 
-### LockManager
-
-The `LockManager` is designed for managing locks associated with unique keys.
-
-```go
-package main
-
-import (
-	"fmt"
-	"time"
-
-	"github.com/catatsuy/cache"
-)
-
-func main() {
-	lm := cache.NewLockManager[int]()
-
-	lm.Lock(1)
-	go func() {
-		defer lm.GetAndLock(1).Unlock()
-		fmt.Println("Goroutine locked and released")
-	}()
-
-	time.Sleep(1 * time.Second)
-	lm.Unlock(1)
-	fmt.Println("Main goroutine released lock")
-}
-```
-
 ### RollingCache
 
 The `RollingCache` provides a simple, dynamically growing cache for ordered elements. It supports appending new items and rotating the cache, which resets its contents while returning the previous state.
-
-#### Example
 
 ```go
 package main
@@ -265,6 +234,35 @@ func main() {
 
 	// The cache should now be empty
 	fmt.Println("Items after rotation:", c.GetItems()) // Output: Items after rotation: []
+}
+```
+
+### LockManager
+
+The `LockManager` is designed for managing locks associated with unique keys.
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/catatsuy/cache"
+)
+
+func main() {
+	lm := cache.NewLockManager[int]()
+
+	lm.Lock(1)
+	go func() {
+		defer lm.GetAndLock(1).Unlock()
+		fmt.Println("Goroutine locked and released")
+	}()
+
+	time.Sleep(1 * time.Second)
+	lm.Unlock(1)
+	fmt.Println("Main goroutine released lock")
 }
 ```
 
