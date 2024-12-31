@@ -154,6 +154,78 @@ func ExampleReadHeavyCacheExpired() {
 	// Item has expired
 }
 
+// Example for RollingCache Append and GetItems
+func ExampleRollingCache() {
+	c := cache.NewRollingCache[int](10)
+
+	// Append values
+	c.Append(1)
+	c.Append(2)
+	c.Append(3)
+
+	// Get the items
+	items := c.GetItems()
+	fmt.Println("Items:", items)
+	// Output: Items: [1 2 3]
+}
+
+// Example for RollingCache with dynamic growth
+func ExampleRollingCache_dynamicGrowth() {
+	c := cache.NewRollingCache[int](10)
+
+	// Append more values than the initial length
+	c.Append(1)
+	c.Append(2)
+	c.Append(3)
+	c.Append(4) // This grows the slice beyond the initial length
+
+	items := c.GetItems()
+	fmt.Println("Items after appending more:", items)
+	// Output: Items after appending more: [1 2 3 4]
+}
+
+// Example for RollingCache Rotate
+func ExampleRollingCache_Rotate() {
+	c := cache.NewRollingCache[int](10)
+
+	// Append values
+	c.Append(1)
+	c.Append(2)
+	c.Append(3)
+
+	// Rotate the cache
+	rotated := c.Rotate()
+	fmt.Println("Rotated items:", rotated)
+
+	// Cache should now be empty
+	fmt.Println("Items after rotation:", c.GetItems())
+	// Output:
+	// Rotated items: [1 2 3]
+	// Items after rotation: []
+}
+
+// Example for RollingCache Size
+func ExampleRollingCache_Size() {
+	c := cache.NewRollingCache[int](10)
+
+	// Initially empty
+	fmt.Println("Size initially:", c.Size())
+
+	// Append values
+	c.Append(1)
+	c.Append(2)
+	fmt.Println("Size after appending:", c.Size())
+
+	// Append another value
+	c.Append(3)
+	fmt.Println("Size after appending more:", c.Size())
+
+	// Output:
+	// Size initially: 0
+	// Size after appending: 2
+	// Size after appending more: 3
+}
+
 // Example for LockManager with GetAndLock
 func ExampleLockManager_GetAndLock() {
 	var lm = cache.NewLockManager[int]()
