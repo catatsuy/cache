@@ -421,6 +421,61 @@ func (c *ReadHeavyCacheInteger[K, V]) Size() int {
 	return len(c.items)
 }
 
+// RollingCache is a thread-safe cache that uses a slice for storing elements.
+// It supports Append and Rotate operations, and maintains an initial length for reset.
+type RollingCache[V any] struct {
+	sync.Mutex
+	items  []V // Slice to store values
+	length int // Initial length of the slice for reset
+}
+
+// NewRollingCache creates a new RollingCache with the specified initial length.
+func NewRollingCache[V any](length int) *RollingCache[V] {
+	return &RollingCache[V]{
+		items:  make([]V, 0, length),
+		length: length,
+	}
+}
+
+// Append adds a value to the cache. The slice grows dynamically.
+func (c *RollingCache[V]) Append(value V) {
+	c.Lock()
+	defer c.Unlock()
+
+	// Append the new value to the slice
+	c.items = append(c.items, value)
+}
+
+// Rotate returns the current slice and replaces it with an empty slice of the initial length.
+func (c *RollingCache[V]) Rotate() []V {
+	c.Lock()
+	defer c.Unlock()
+
+	// Return the current items and reset the slice
+	oldItems := c.items
+	c.items = make([]V, 0, c.length)
+	return oldItems
+}
+
+// GetItems returns a copy of the current slice.
+func (c *RollingCache[V]) GetItems() []V {
+	c.Lock()
+	defer c.Unlock()
+
+	// Create a copy of the slice to avoid external modification
+	copiedItems := make([]V, len(c.items))
+	copy(copiedItems, c.items)
+	return copiedItems
+}
+
+// Size returns the number of elements currently in the cache.
+func (c *RollingCache[V]) Size() int {
+	c.Lock()
+	defer c.Unlock()
+
+	return len(c.items)
+}
+
 // LockManager manages a set of mutexes identified by keys of type K.
 // It is designed to provide fine-grained locking for operations on individual keys.
 type LockManager[K comparable] struct {

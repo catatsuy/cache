@@ -517,6 +517,87 @@ func TestReadHeavyCacheInteger_Size(t *testing.T) {
 	}
 }
 
+func TestRollingCache_AppendAndGetItems(t *testing.T) {
+	rollingCache := cache.NewRollingCache[int](10)
+
+	// Append values
+	rollingCache.Append(1)
+	rollingCache.Append(2)
+	rollingCache.Append(3)
+	rollingCache.Append(4) // This should grow the slice dynamically
+
+	items := rollingCache.GetItems()
+	expected := []int{1, 2, 3, 4}
+
+	if len(items) != len(expected) {
+		t.Errorf("Expected length %d, but got %d", len(expected), len(items))
+	}
+
+	for i, v := range items {
+		if v != expected[i] {
+			t.Errorf("Expected items[%d] to be %d, but got %d", i, expected[i], v)
+		}
+	}
+}
+
+func TestRollingCache_Rotate(t *testing.T) {
+	rollingCache := cache.NewRollingCache[int](10)
+
+	// Append values
+	rollingCache.Append(1)
+	rollingCache.Append(2)
+	rollingCache.Append(3)
+
+	// Rotate the cache
+	rotated := rollingCache.Rotate()
+	expected := []int{1, 2, 3}
+
+	// Check the rotated slice
+	if len(rotated) != len(expected) {
+		t.Errorf("Expected rotated length %d, but got %d", len(expected), len(rotated))
+	}
+
+	for i, v := range rotated {
+		if v != expected[i] {
+			t.Errorf("Expected rotated[%d] to be %d, but got %d", i, expected[i], v)
+		}
+	}
+
+	// Check if the cache is now empty
+	if len(rollingCache.GetItems()) != 0 {
+		t.Errorf("Expected cache to be empty after rotation")
+	}
+}
+
+func TestRollingCache_Size(t *testing.T) {
+	rollingCache := cache.NewRollingCache[int](10)
+
+	// Initially empty
+	if rollingCache.Size() != 0 {
+		t.Errorf("Expected size 0, but got %d", rollingCache.Size())
+	}
+
+	// Append values
+	rollingCache.Append(1)
+	rollingCache.Append(2)
+
+	if rollingCache.Size() != 2 {
+		t.Errorf("Expected size 2, but got %d", rollingCache.Size())
+	}
+
+	// Append one more value
+	rollingCache.Append(3)
+	if rollingCache.Size() != 3 {
+		t.Errorf("Expected size 3, but got %d", rollingCache.Size())
+	}
+
+	// Append more values
+	rollingCache.Append(4)
+	if rollingCache.Size() != 4 { // Size should increase as more elements are added
+		t.Errorf("Expected size 4, but got %d", rollingCache.Size())
+	}
+}
+
 // Benchmark for WriteHeavyCache's Set method
 func BenchmarkWriteHeavyCache_Set(b *testing.B) {
 	cache := cache.NewWriteHeavyCache[int, int]()
