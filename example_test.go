@@ -171,7 +171,7 @@ func ExampleRollingCache() {
 
 // Example for RollingCache with dynamic growth
 func ExampleRollingCache_dynamicGrowth() {
-	c := cache.NewRollingCache[int](10)
+	c := cache.NewRollingCache[int](3)
 
 	// Append more values than the initial length
 	c.Append(1)
