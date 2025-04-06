@@ -17,12 +17,12 @@ func BenchmarkStandardSingleflight(b *testing.B) {
 	keys := generateKeys(10)
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			key := keys[i%10]
-			sg.Do(key, func() (interface{}, error) {
+			sg.Do(key, func() (any, error) {
 				return i, nil
 			})
 		}(i)
@@ -37,16 +37,17 @@ func BenchmarkStandardSingleflightCast(b *testing.B) {
 	keys := generateKeys(10)
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			key := keys[i%10]
-			ii, _, _ := sg.Do(key, func() (interface{}, error) {
+			ii, _, _ := sg.Do(key, func() (any, error) {
 				return i, nil
 			})
 			if _, ok := ii.(int); !ok {
-				b.Fatalf("unexpected type: %T", ii)
+				b.Errorf("unexpected type: %T", ii)
+				return
 			}
 		}(i)
 	}
@@ -60,7 +61,7 @@ func BenchmarkGenericsSingleflight(b *testing.B) {
 	keys := generateKeys(10)
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
@@ -80,7 +81,7 @@ func BenchmarkCustomSingleflight(b *testing.B) {
 	keys := generateKeys(10)
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
@@ -95,7 +96,7 @@ func BenchmarkCustomSingleflight(b *testing.B) {
 
 func generateKeys(n int) []string {
 	keys := make([]string, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		keys[i] = "key-" + strconv.Itoa(i)
 	}
 	return keys

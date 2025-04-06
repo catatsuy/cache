@@ -1,4 +1,4 @@
-FROM golang:1.23
+FROM golang:1.24
 
 RUN apt-get update && apt-get install -y --no-install-recommends make && rm -rf /var/lib/apt/lists/*
 
