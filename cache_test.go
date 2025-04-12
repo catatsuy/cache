@@ -267,7 +267,7 @@ func TestWriteHeavyCache_ParallelWrite(t *testing.T) {
 	wg.Wait()
 
 	// Verify if all values are set correctly
-	for p := 0; p < numProcs; p++ {
+	for p := range numProcs {
 		for i := range 1000 {
 			if value, found := cache.Get(p*1000 + i); !found || value != i {
 				t.Errorf("Expected value %d for key %d, but got %d (found: %v)", i, p*1000+i, value, found)
@@ -296,7 +296,7 @@ func TestReadHeavyCache_ParallelWrite(t *testing.T) {
 	wg.Wait()
 
 	// Verify if all values are set correctly
-	for p := 0; p < numProcs; p++ {
+	for p := range numProcs {
 		for i := range 1000 {
 			if value, found := cache.Get(p*1000 + i); !found || value != i {
 				t.Errorf("Expected value %d for key %d, but got %d (found: %v)", i, p*1000+i, value, found)
@@ -684,7 +684,7 @@ func BenchmarkWriteHeavyCache_ParallelWrite(b *testing.B) {
 			wg.Add(1)
 			go func(procID int) {
 				defer wg.Done()
-				for j := 0; j < 1000; j++ {
+				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
 			}(p)
@@ -727,11 +727,11 @@ func BenchmarkWriteHeavyCacheInteger_ParallelWrite(b *testing.B) {
 
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
-		for p := 0; p < numProcs; p++ {
+		for p := range numProcs {
 			wg.Add(1)
 			go func(procID int) {
 				defer wg.Done()
-				for j := 0; j < 1000; j++ {
+				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
 			}(p)
@@ -751,11 +751,11 @@ func BenchmarkReadHeavyCacheInteger_ParallelWrite(b *testing.B) {
 
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
-		for p := 0; p < numProcs; p++ {
+		for p := range numProcs {
 			wg.Add(1)
 			go func(procID int) {
 				defer wg.Done()
-				for j := 0; j < 1000; j++ {
+				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
 			}(p)
@@ -780,11 +780,11 @@ func BenchmarkWriteHeavyCacheInteger_ParallelIncr(b *testing.B) {
 
 	for range b.N {
 		// Parallel increments using GOMAXPROCS goroutines
-		for p := 0; p < numProcs; p++ {
+		for p := range numProcs {
 			wg.Add(1)
 			go func(procID int) {
 				defer wg.Done()
-				for j := 0; j < 1000; j++ {
+				for j := range 1000 {
 					cache.Incr(procID*1000+j, 1)
 				}
 			}(p)
@@ -809,11 +809,11 @@ func BenchmarkReadHeavyCacheInteger_ParallelIncr(b *testing.B) {
 
 	for range b.N {
 		// Parallel increments using GOMAXPROCS goroutines
-		for p := 0; p < numProcs; p++ {
+		for p := range numProcs {
 			wg.Add(1)
 			go func(procID int) {
 				defer wg.Done()
-				for j := 0; j < 1000; j++ {
+				for j := range 1000 {
 					cache.Incr(procID*1000+j, 1)
 				}
 			}(p)
