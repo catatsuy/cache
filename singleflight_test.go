@@ -12,7 +12,7 @@ import (
 
 func TestDo(t *testing.T) {
 	sf := cache.NewSingleflightGroup[string]()
-	v, err := sf.Do("key", func() (string, error) {
+	v, err, _ := sf.Do("key", func() (string, error) {
 		return "bar", nil
 	})
 	if got, want := v, "bar"; got != want {
@@ -26,7 +26,7 @@ func TestDo(t *testing.T) {
 func TestDoErr(t *testing.T) {
 	sf := cache.NewSingleflightGroup[string]()
 	someErr := errors.New("Some error")
-	v, err := sf.Do("key", func() (string, error) {
+	v, err, _ := sf.Do("key", func() (string, error) {
 		return "", someErr
 	})
 	if err != someErr {
@@ -64,7 +64,7 @@ func TestDoDupSuppress(t *testing.T) {
 		go func() {
 			defer wg2.Done()
 			wg1.Done()
-			v, err := sf.Do("key", fn)
+			v, err, _ := sf.Do("key", fn)
 			if err != nil {
 				t.Errorf("Do error: %v", err)
 				return
@@ -87,7 +87,7 @@ func TestDoDupSuppress(t *testing.T) {
 func TestDoTimeout(t *testing.T) {
 	sf := cache.NewSingleflightGroup[string]()
 	start := time.Now()
-	v, err := sf.Do("key", func() (string, error) {
+	v, err, _ := sf.Do("key", func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
 		return "bar", nil
 	})
@@ -113,7 +113,7 @@ func TestDoMultipleErrors(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			v, err := sf.Do("key", func() (string, error) {
+			v, err, _ := sf.Do("key", func() (string, error) {
 				atomic.AddInt32(&calls, 1)
 				time.Sleep(10 * time.Millisecond)
 				return "", someErr
