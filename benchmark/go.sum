@@ -1,6 +1,6 @@
-github.com/catatsuy/cache v0.2.0 h1:AGQLRAYzU/HSHaxQB1Ih2mFrWT2Kwd8veaUukaFT14s=
-github.com/catatsuy/cache v0.2.0/go.mod h1:Ppaed4sPVG6q25/vLaj1B2ZG6VRh1XbGI+Gx1v5//2U=
-github.com/catatsuy/sync v0.0.1 h1:xIRkpBV3+q2oV6HahIEU3dOVjx3dfZDQfRMN4wG98Xs=
-github.com/catatsuy/sync v0.0.1/go.mod h1:y380VTE1YaSjcQW0jav0Yas3RPefPbxVxRMAVO526w0=
-golang.org/x/sync v0.9.0 h1:fEo0HyrW1GIgZdpbhCRO0PkJajUS5H9IFUztCgEo2jQ=
-golang.org/x/sync v0.9.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
+github.com/catatsuy/cache v0.4.0 h1:Ud6umIJ7QAcQ0Q6n0MAEfbCWml+sFKwnfyk7j7U1CrU=
+github.com/catatsuy/cache v0.4.0/go.mod h1:Ppaed4sPVG6q25/vLaj1B2ZG6VRh1XbGI+Gx1v5//2U=
+github.com/catatsuy/sync v0.0.2 h1:Exx80knesqc4hq49WW4G17k7PxFFtfSiSPMqLTsyRWY=
+github.com/catatsuy/sync v0.0.2/go.mod h1:y380VTE1YaSjcQW0jav0Yas3RPefPbxVxRMAVO526w0=
+golang.org/x/sync v0.14.0 h1:woo0S4Yywslg6hp4eUFjTVOyKt0RookbpAHG4c1HmhQ=
+golang.org/x/sync v0.14.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
