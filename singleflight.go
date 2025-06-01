@@ -51,11 +51,8 @@ func NewSingleflightGroup[V any]() *SingleflightGroup[V] {
 func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) {
 	// Lock to check if a call is already in progress for the given key
 	sf.mu.Lock()
-	var (
-		c  *call[V]
-		ok bool
-	)
-	if c, ok = sf.m[key]; !ok {
+	c, ok := sf.m[key]
+	if !ok {
 		// If no call exists for the key, create a new one
 		c = &call[V]{}
 		sf.m[key] = c
