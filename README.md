@@ -291,7 +291,7 @@ func main() {
 	}
 
 	// Use SingleflightGroup to ensure only one call for the same key at a time
-	value, err := sf.Do("key", func() (string, error) {
+	value, err, _ := sf.Do("key", func() (string, error) {
 		return loadData("key")
 	})
 
@@ -333,7 +333,7 @@ func Get(key int) int {
 	}
 
 	// Use SingleflightGroup to prevent duplicate HeavyGet calls for the same key
-	v, err := sf.Do(fmt.Sprintf("cacheGet_%d", key), func() (int, error) {
+	v, err, _ := sf.Do(fmt.Sprintf("cacheGet_%d", key), func() (int, error) {
 		// Load the data and store it in the cache
 		value := HeavyGet(key)
 		c.Set(key, value)
