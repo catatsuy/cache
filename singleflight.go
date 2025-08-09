@@ -12,6 +12,9 @@ import (
 //   - Panic and runtime.Goexit handling: This implementation does not handle cases
 //     where the function panics or terminates abnormally. In the official implementation,
 //     errors from panic and Goexit are handled to prevent blocked goroutines.
+//   - Shared result indicator: The official singleflight implementation includes a boolean
+//     return value to indicate if the result was shared among multiple callers. This
+//     implementation does not include this feature.
 //   - Immediate synchronous cleanup: In this implementation, the completed result is
 //     removed from the map asynchronously. In the official implementation, cleanup
 //     is handled synchronously within the doCall function to ensure immediate memory release.
@@ -44,7 +47,8 @@ func NewSingleflightGroup[V any]() *SingleflightGroup[V] {
 //
 // Unlike the official singleflight, this function does not provide:
 //   - Panic and Goexit handling
-func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (v V, err error, shared bool) {
+//   - Shared result flag to indicate if the result was reused for multiple callers
+func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) {
 	// Lock to check if a call is already in progress for the given key
 	sf.mu.Lock()
 	c, ok := sf.m[key]
@@ -68,12 +72,8 @@ func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (v V, err e
 			delete(sf.m, key)
 			sf.mu.Unlock()
 		}()
-
-		c.mu.Unlock()
-
-		return c.value, c.err, false
 	}
 	c.mu.Unlock()
 
-	return c.value, c.err, true
+	return c.value, c.err
 }
