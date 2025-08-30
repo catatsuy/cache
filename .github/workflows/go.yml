@@ -21,3 +21,8 @@ jobs:
         run: |
           make vet
           make test
+
+      - name: benchmark
+        run: |
+          cd benchmark
+          go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4
