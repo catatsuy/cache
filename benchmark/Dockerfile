@@ -1,4 +1,4 @@
-FROM golang:1.24
+FROM golang:1.25
 
 RUN apt-get update && apt-get install -y --no-install-recommends make && rm -rf /var/lib/apt/lists/*
 
@@ -8,4 +8,4 @@ RUN go mod download
 
 COPY . .
 
-CMD ["go", "test", "-bench=.", "-benchmem"]
+CMD ["go", "test", "-bench=.", "-benchmem", "-benchtime=3s", "-cpu=1,2,4"]
