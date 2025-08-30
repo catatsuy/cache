@@ -55,6 +55,10 @@ PASS
 
 ## Observations (EC2 c7g.xlarge, linux/arm64)
 
+![keys=1](./images/ns_op%20-%20keys=1.png)
+
+![keys=10](./images/ns_op%20-%20keys=10.png)
+
 - Setup: `go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
 - **CustomSingleflight is consistently fastest.**
   - `keys=1` (worst contention): **42.67 ns/op** vs std **196.6** (@P=1 → ~**4.6×**), **152.3** vs **331.7** (@P=4 → ~**2.2×**).
