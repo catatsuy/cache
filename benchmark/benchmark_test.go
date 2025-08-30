@@ -2,7 +2,6 @@ package benchmark_test
 
 import (
 	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/catatsuy/cache"
@@ -10,91 +9,92 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-func BenchmarkStandardSingleflight(b *testing.B) {
-	var sg singleflight.Group
-	var wg sync.WaitGroup
-
-	keys := generateKeys(10)
-	b.ResetTimer()
-
-	for i := range b.N {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			key := keys[i%10]
-			sg.Do(key, func() (any, error) {
-				return i, nil
-			})
-		}(i)
+func BenchmarkSingleflight(b *testing.B) {
+	for _, keys := range []int{1, 10} { // 衝突度
+		b.Run("std/keys="+strconv.Itoa(keys), func(b *testing.B) {
+			var sg singleflight.Group
+			runStd(b, &sg, keys)
+		})
+		b.Run("std-cast/keys="+strconv.Itoa(keys), func(b *testing.B) {
+			var sg singleflight.Group
+			runStdWithCast(b, &sg, keys)
+		})
+		b.Run("generics/keys="+strconv.Itoa(keys), func(b *testing.B) {
+			var sg cs.Group[int]
+			runGenerics(b, &sg, keys)
+		})
+		b.Run("custom/keys="+strconv.Itoa(keys), func(b *testing.B) {
+			sf := cache.NewSingleflightGroup[int]()
+			runCustom(b, sf, keys)
+		})
 	}
-	wg.Wait()
 }
 
-func BenchmarkStandardSingleflightCast(b *testing.B) {
-	var sg singleflight.Group
-	var wg sync.WaitGroup
-
-	keys := generateKeys(10)
+func runStd(b *testing.B, sg *singleflight.Group, keyCount int) {
+	b.ReportAllocs()
+	keys := genKeys(keyCount)
 	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			key := keys[i%keyCount]
+			i++
+			v, _, _ := sg.Do(key, func() (any, error) { return i, nil })
 
-	for i := range b.N {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			key := keys[i%10]
-			ii, _, _ := sg.Do(key, func() (any, error) {
-				return i, nil
-			})
-			if _, ok := ii.(int); !ok {
-				b.Errorf("unexpected type: %T", ii)
-				return
-			}
-		}(i)
-	}
-	wg.Wait()
+			_ = v
+		}
+	})
 }
 
-func BenchmarkGenericsSingleflight(b *testing.B) {
-	var sg cs.Group[int]
-	var wg sync.WaitGroup
-
-	keys := generateKeys(10)
+func runStdWithCast(b *testing.B, sg *singleflight.Group, keyCount int) {
+	b.ReportAllocs()
+	keys := genKeys(keyCount)
 	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			key := keys[i%keyCount]
+			i++
+			v, _, _ := sg.Do(key, func() (any, error) { return i, nil })
 
-	for i := range b.N {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			key := keys[i%10]
-			sg.Do(key, func() (int, error) {
-				return i, nil
-			})
-		}(i)
-	}
-	wg.Wait()
+			_ = v.(int)
+		}
+	})
 }
 
-func BenchmarkCustomSingleflight(b *testing.B) {
-	sf := cache.NewSingleflightGroup[int]()
-	var wg sync.WaitGroup
-
-	keys := generateKeys(10)
+func runGenerics(b *testing.B, sg *cs.Group[int], keyCount int) {
+	b.ReportAllocs()
+	keys := genKeys(keyCount)
 	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			key := keys[i%keyCount]
+			i++
+			v, _, _ := sg.Do(key, func() (int, error) { return i, nil })
 
-	for i := range b.N {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			key := keys[i%10]
-			sf.Do(key, func() (int, error) {
-				return i, nil
-			})
-		}(i)
-	}
-	wg.Wait()
+			_ = v
+		}
+	})
 }
 
-func generateKeys(n int) []string {
+func runCustom(b *testing.B, sf *cache.SingleflightGroup[int], keyCount int) {
+	b.ReportAllocs()
+	keys := genKeys(keyCount)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			key := keys[i%keyCount]
+			i++
+			v, _ := sf.Do(key, func() (int, error) { return i, nil })
+
+			_ = v
+		}
+	})
+}
+
+func genKeys(n int) []string {
 	keys := make([]string, n)
 	for i := range n {
 		keys[i] = "key-" + strconv.Itoa(i)
