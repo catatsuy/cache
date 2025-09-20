@@ -1,3 +1,3 @@
 module github.com/catatsuy/cache
 
-go 1.23
+go 1.25

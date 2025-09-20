@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/catatsuy/cache"
@@ -255,13 +256,12 @@ func TestWriteHeavyCache_ParallelWrite(t *testing.T) {
 
 	// Write to the cache concurrently from GOMAXPROCS goroutines
 	for p := range numProcs {
-		wg.Add(1)
-		go func(procID int) {
-			defer wg.Done()
+		procID := p
+		wg.Go(func() {
 			for i := range 1000 {
 				cache.Set(procID*1000+i, i) // Unique keys per goroutine to avoid race conditions
 			}
-		}(p)
+		})
 	}
 
 	wg.Wait()
@@ -284,13 +284,12 @@ func TestReadHeavyCache_ParallelWrite(t *testing.T) {
 
 	// Write to the cache concurrently from GOMAXPROCS goroutines
 	for p := range numProcs {
-		wg.Add(1)
-		go func(procID int) {
-			defer wg.Done()
+		procID := p
+		wg.Go(func() {
 			for i := range 1000 {
 				cache.Set(procID*1000+i, i) // Unique keys per goroutine to avoid race conditions
 			}
-		}(p)
+		})
 	}
 
 	wg.Wait()
@@ -306,79 +305,87 @@ func TestReadHeavyCache_ParallelWrite(t *testing.T) {
 }
 
 func TestWriteHeavyCacheExpired_SetAndGet(t *testing.T) {
-	c := cache.NewWriteHeavyCacheExpired[int, string]()
+	synctest.Test(t, func(t *testing.T) {
+		c := cache.NewWriteHeavyCacheExpired[int, string]()
 
-	// Set an item with a 1-second expiration
-	c.Set(1, "test", 1*time.Second)
+		// Set an item with a 1-second expiration
+		c.Set(1, "test", 1*time.Second)
 
-	// Retrieve the item immediately
-	if value, found := c.Get(1); !found || value != "test" {
-		t.Errorf("Expected 'test', got %v", value)
-	}
+		// Retrieve the item immediately
+		if value, found := c.Get(1); !found || value != "test" {
+			t.Errorf("Expected 'test', got %v", value)
+		}
 
-	// Wait for 2 seconds and check if it expires
-	time.Sleep(2 * time.Second)
-	if _, found := c.Get(1); found {
-		t.Error("Expected item to be expired, but it was found")
-	}
+		// Wait for 2 seconds and check if it expires
+		time.Sleep(2 * time.Second)
+		if _, found := c.Get(1); found {
+			t.Error("Expected item to be expired, but it was found")
+		}
+	})
 }
 
 func TestReadHeavyCacheExpired_SetAndGet(t *testing.T) {
-	c := cache.NewReadHeavyCacheExpired[int, string]()
+	synctest.Test(t, func(t *testing.T) {
+		c := cache.NewReadHeavyCacheExpired[int, string]()
 
-	// Set an item with a 1-second expiration
-	c.Set(1, "test", 1*time.Second)
+		// Set an item with a 1-second expiration
+		c.Set(1, "test", 1*time.Second)
 
-	// Retrieve the item immediately
-	if value, found := c.Get(1); !found || value != "test" {
-		t.Errorf("Expected 'test', got %v", value)
-	}
+		// Retrieve the item immediately
+		if value, found := c.Get(1); !found || value != "test" {
+			t.Errorf("Expected 'test', got %v", value)
+		}
 
-	// Wait for 2 seconds and check if it expires
-	time.Sleep(2 * time.Second)
-	if _, found := c.Get(1); found {
-		t.Error("Expected item to be expired, but it was found")
-	}
+		// Wait for 2 seconds and check if it expires
+		time.Sleep(2 * time.Second)
+		if _, found := c.Get(1); found {
+			t.Error("Expected item to be expired, but it was found")
+		}
+	})
 }
 
 func TestWriteHeavyCacheExpired_GetWithExpireStatus(t *testing.T) {
-	c := cache.NewWriteHeavyCacheExpired[int, string]()
+	synctest.Test(t, func(t *testing.T) {
+		c := cache.NewWriteHeavyCacheExpired[int, string]()
 
-	c.Set(1, "value", 100*time.Millisecond)
+		c.Set(1, "value", 100*time.Millisecond)
 
-	if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
-		t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
-	}
+		if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
+			t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
+		}
 
-	time.Sleep(150 * time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
 
-	if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
-		t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
-	}
+		if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
+			t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
+		}
 
-	if _, found := c.Get(1); found {
-		t.Errorf("expected Get to report not found for expired item")
-	}
+		if _, found := c.Get(1); found {
+			t.Errorf("expected Get to report not found for expired item")
+		}
+	})
 }
 
 func TestReadHeavyCacheExpired_GetWithExpireStatus(t *testing.T) {
-	c := cache.NewReadHeavyCacheExpired[int, string]()
+	synctest.Test(t, func(t *testing.T) {
+		c := cache.NewReadHeavyCacheExpired[int, string]()
 
-	c.Set(1, "value", 100*time.Millisecond)
+		c.Set(1, "value", 100*time.Millisecond)
 
-	if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
-		t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
-	}
+		if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
+			t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
+		}
 
-	time.Sleep(150 * time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
 
-	if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
-		t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
-	}
+		if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
+			t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
+		}
 
-	if _, found := c.Get(1); found {
-		t.Errorf("expected Get to report not found for expired item")
-	}
+		if _, found := c.Get(1); found {
+			t.Errorf("expected Get to report not found for expired item")
+		}
+	})
 }
 
 func TestWriteHeavyCache_GetItems(t *testing.T) {
@@ -721,13 +728,12 @@ func BenchmarkWriteHeavyCache_ParallelWrite(b *testing.B) {
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
@@ -744,13 +750,12 @@ func BenchmarkReadHeavyCache_ParallelWrite(b *testing.B) {
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
@@ -768,13 +773,12 @@ func BenchmarkWriteHeavyCacheInteger_ParallelWrite(b *testing.B) {
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
@@ -792,13 +796,12 @@ func BenchmarkReadHeavyCacheInteger_ParallelWrite(b *testing.B) {
 	for range b.N {
 		// Parallel writes using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Set(procID*1000+j, j)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
@@ -821,13 +824,12 @@ func BenchmarkWriteHeavyCacheInteger_ParallelIncr(b *testing.B) {
 	for range b.N {
 		// Parallel increments using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Incr(procID*1000+j, 1)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
@@ -850,52 +852,53 @@ func BenchmarkReadHeavyCacheInteger_ParallelIncr(b *testing.B) {
 	for range b.N {
 		// Parallel increments using GOMAXPROCS goroutines
 		for p := range numProcs {
-			wg.Add(1)
-			go func(procID int) {
-				defer wg.Done()
+			procID := p
+			wg.Go(func() {
 				for j := range 1000 {
 					cache.Incr(procID*1000+j, 1)
 				}
-			}(p)
+			})
 		}
 		wg.Wait()
 	}
 }
 
 func TestLockManager(t *testing.T) {
-	lm := cache.NewLockManager[int]()
+	synctest.Test(t, func(t *testing.T) {
+		lm := cache.NewLockManager[int]()
 
-	id := 1
-	lm.Lock(id)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		id := 1
 		lm.Lock(id)
+
+		var wg sync.WaitGroup
+		started := make(chan struct{})
+		wg.Go(func() {
+			close(started) // signal attempt to lock
+			lm.Lock(id)
+			lm.Unlock(id)
+		})
+
+		<-started // ensure goroutine attempted to lock
 		lm.Unlock(id)
-	}()
+		wg.Wait()
 
-	time.Sleep(100 * time.Millisecond)
-	lm.Unlock(id)
+		id2 := 2
+		lm.Lock(id2)
 
-	wg.Wait()
+		released := make(chan struct{})
+		wg.Go(func() { // will release the lock when signaled
+			<-released
+			lm.Unlock(id2)
+		})
 
-	id2 := 2
-	lm.Lock(id2)
+		done := make(chan struct{})
+		wg.Go(func() {
+			defer lm.GetAndLock(id2).Unlock()
+			close(done)
+		})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		time.Sleep(5 * time.Millisecond)
-		lm.Unlock(id2)
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer lm.GetAndLock(id2).Unlock()
-	}()
-
-	wg.Wait()
+		close(released) // allow unlock
+		<-done          // ensure GetAndLock succeeded at least once
+		wg.Wait()
+	})
 }
