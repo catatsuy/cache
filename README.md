@@ -7,6 +7,7 @@ This library provides efficient caching solutions for various usage patterns, su
 - **WriteHeavyCache**: Optimized for frequent write operations.
 - **ReadHeavyCache**: Optimized for frequent read operations.
 - **Expiration Support**: Built-in expiration for cache entries in `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired`.
+- **SWR-Friendly Expiration**: `GetWithExpireStatus` returns the value with an expired flag for stale-while-revalidate.
 - **Integer-Specific Caches**: Specialized caches (`WriteHeavyCacheInteger` and `ReadHeavyCacheInteger`) with increment operations.
 - **RollingCache**: A dynamically growing slice-based cache with efficient `Append` and `Rotate` operations, suitable for maintaining ordered sequences of elements.
 - **Faster Singleflight**: A custom implementation that is up to **2x faster** than the standard Singleflight. See detailed results in the [benchmark](/benchmark) directory.
@@ -104,7 +105,7 @@ func main() {
 
 ### Expiration Support
 
-The `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired` caches provide expiration functionality, allowing you to specify a duration for each cache entry.
+The `WriteHeavyCacheExpired` and `ReadHeavyCacheExpired` caches provide expiration functionality, allowing you to specify a duration for each cache entry. Both expose `GetWithExpireStatus` to read a value together with its expiration status.
 
 #### WriteHeavyCacheExpired Example
 
@@ -151,6 +152,50 @@ func main() {
 	time.Sleep(2 * time.Second)
 	_, found := c.Get(1)
 	fmt.Println("After expiration:", found) // Output: After expiration: false
+}
+```
+
+### Stale-While-Revalidate
+
+To implement stale-while-revalidate, use `GetWithExpireStatus`, which returns the value even if it is expired, together with the expired flag. You can serve the stale value immediately and trigger a background refresh.
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "time"
+
+    "github.com/catatsuy/cache"
+)
+
+var c = cache.NewReadHeavyCacheExpired[string, string]()
+
+func fetch(ctx context.Context, key string) string {
+    // heavy fetch (placeholder)
+    time.Sleep(200 * time.Millisecond)
+    return "fresh:" + key
+}
+
+func getWithSWR(ctx context.Context, key string) string {
+    if v, found, expired := c.GetWithExpireStatus(key); found {
+        if expired {
+            go func() {
+                fresh := fetch(ctx, key)
+                c.Set(key, fresh, 5*time.Minute)
+            }()
+        }
+        return v // serve stale-or-fresh immediately
+    }
+    // cache miss: fetch synchronously
+    fresh := fetch(ctx, key)
+    c.Set(key, fresh, 5*time.Minute)
+    return fresh
+}
+
+func main() {
+    fmt.Println(getWithSWR(context.Background(), "k"))
 }
 ```
 
