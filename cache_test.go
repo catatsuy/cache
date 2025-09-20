@@ -341,6 +341,46 @@ func TestReadHeavyCacheExpired_SetAndGet(t *testing.T) {
 	}
 }
 
+func TestWriteHeavyCacheExpired_GetWithExpireStatus(t *testing.T) {
+	c := cache.NewWriteHeavyCacheExpired[int, string]()
+
+	c.Set(1, "value", 100*time.Millisecond)
+
+	if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
+		t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
+	}
+
+	time.Sleep(150 * time.Millisecond)
+
+	if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
+		t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
+	}
+
+	if _, found := c.Get(1); found {
+		t.Errorf("expected Get to report not found for expired item")
+	}
+}
+
+func TestReadHeavyCacheExpired_GetWithExpireStatus(t *testing.T) {
+	c := cache.NewReadHeavyCacheExpired[int, string]()
+
+	c.Set(1, "value", 100*time.Millisecond)
+
+	if v, found, expired := c.GetWithExpireStatus(1); !found || expired || v != "value" {
+		t.Errorf("expected found=true expired=false value, got found=%v expired=%v value=%v", found, expired, v)
+	}
+
+	time.Sleep(150 * time.Millisecond)
+
+	if v, found, expired := c.GetWithExpireStatus(1); !found || !expired || v != "value" {
+		t.Errorf("expected found=true expired=true value, got found=%v expired=%v value=%v", found, expired, v)
+	}
+
+	if _, found := c.Get(1); found {
+		t.Errorf("expected Get to report not found for expired item")
+	}
+}
+
 func TestWriteHeavyCache_GetItems(t *testing.T) {
 	cache := cache.NewWriteHeavyCache[string, int]()
 	cache.Set("key1", 100)

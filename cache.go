@@ -198,6 +198,21 @@ func (c *WriteHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
 	return v.value, true
 }
 
+// GetWithExpireStatus retrieves a value from WriteHeavyCacheExpired.
+// It returns the value, whether it was found, and whether it is expired.
+// When the item is expired, it still returns the stored value with expired=true.
+// This is useful for implementing stale-while-revalidate behavior.
+func (c *WriteHeavyCacheExpired[K, V]) GetWithExpireStatus(key K) (V, bool, bool) {
+	c.Lock()
+	defer c.Unlock()
+	v, found := c.items[key]
+	if !found {
+		var zero V
+		return zero, false, false
+	}
+	return v.value, true, time.Now().After(v.expire)
+}
+
 // Delete removes a key from WriteHeavyCacheExpired.
 func (c *WriteHeavyCacheExpired[K, V]) Delete(key K) {
 	c.Lock()
@@ -233,6 +248,21 @@ func (c *ReadHeavyCacheExpired[K, V]) Get(key K) (V, bool) {
 		return zero, false
 	}
 	return v.value, true
+}
+
+// GetWithExpireStatus retrieves a value from ReadHeavyCacheExpired.
+// It returns the value, whether it was found, and whether it is expired.
+// When the item is expired, it still returns the stored value with expired=true.
+// This is useful for implementing stale-while-revalidate behavior.
+func (c *ReadHeavyCacheExpired[K, V]) GetWithExpireStatus(key K) (V, bool, bool) {
+	c.RLock()
+	defer c.RUnlock()
+	v, found := c.items[key]
+	if !found {
+		var zero V
+		return zero, false, false
+	}
+	return v.value, true, time.Now().After(v.expire)
 }
 
 // Delete removes a key from ReadHeavyCacheExpired.
