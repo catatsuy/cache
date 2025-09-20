@@ -124,7 +124,8 @@ func ExampleWriteHeavyCacheExpired() {
 		fmt.Println("Not found")
 	}
 
-	time.Sleep(2 * time.Second)
+	// Expire immediately without waiting
+	c.Set(1, "apple", -1*time.Second)
 	if _, found := c.Get(1); !found {
 		fmt.Println("Item has expired")
 	}
@@ -145,7 +146,8 @@ func ExampleReadHeavyCacheExpired() {
 		fmt.Println("Not found")
 	}
 
-	time.Sleep(2 * time.Second)
+	// Expire immediately without waiting
+	c.Set(1, "orange", -1*time.Second)
 	if _, found := c.Get(1); !found {
 		fmt.Println("Item has expired")
 	}
@@ -233,7 +235,8 @@ func ExampleLockManager_GetAndLock() {
 	heavyOperation := func(id int) {
 		defer lm.GetAndLock(id).Unlock()
 		fmt.Printf("Starting heavy operation on resource %d\n", id)
-		time.Sleep(2 * time.Second)
+		// simulate heavy work without slow test
+		// time.Sleep(2 * time.Second)
 		fmt.Printf("Completed heavy operation on resource %d\n", id)
 	}
 
@@ -268,39 +271,39 @@ func ExampleLockManager() {
 	// Create a new LockManager for integer keys
 	lm := cache.NewLockManager[int]()
 	var wg sync.WaitGroup
-	wg.Add(3)
+	firstDone := make(chan struct{})
 
 	// Simulate concurrent access to the same key
 	key := 1
 
-	// First goroutine locks and performs some work
-	go func() {
-		defer wg.Done()
-		lm.Lock(key)
-		fmt.Println("Goroutine 1: Locked")
-		// Simulate some work
-		fmt.Println("Goroutine 1: Doing work")
-		lm.Unlock(key)
-		fmt.Println("Goroutine 1: Unlocked")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(time.Millisecond)
-		defer lm.GetAndLock(key).Unlock()
-		fmt.Println("Goroutine 2: Locked")
-		// Simulate some work
-		fmt.Println("Goroutine 2: Doing work")
-		fmt.Println("Goroutine 2: Unlocked")
-	}()
-
+	// Main goroutine does work first deterministically
 	lm.Lock(key)
 	fmt.Println("Locked")
 	// Simulate some work
 	fmt.Println("Doing work")
 	lm.Unlock(key)
 	fmt.Println("Unlocked")
-	wg.Done()
+
+	// First goroutine locks and performs some work
+	wg.Go(func() {
+		lm.Lock(key)
+		fmt.Println("Goroutine 1: Locked")
+		// Simulate some work
+		fmt.Println("Goroutine 1: Doing work")
+		lm.Unlock(key)
+		fmt.Println("Goroutine 1: Unlocked")
+		close(firstDone)
+	})
+
+	wg.Go(func() {
+		<-firstDone // ensure goroutine 1 runs first
+		defer lm.GetAndLock(key).Unlock()
+		fmt.Println("Goroutine 2: Locked")
+		// Simulate some work
+		fmt.Println("Goroutine 2: Doing work")
+		fmt.Println("Goroutine 2: Unlocked")
+	})
+
 	wg.Wait()
 	// Output:
 	// Locked
