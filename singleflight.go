@@ -69,7 +69,10 @@ func (sf *SingleflightGroup[V]) Do(key string, fn func() (V, error)) (V, error) 
 		// Schedule the deletion of the completed call asynchronously
 		go func() {
 			sf.mu.Lock()
-			delete(sf.m, key)
+			// Only delete if the call in the map is the same as the completed one
+			if sf.m[key] == c {
+				delete(sf.m, key)
+			}
 			sf.mu.Unlock()
 		}()
 	}
