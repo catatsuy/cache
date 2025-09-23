@@ -60,8 +60,8 @@ PASS
 
 - Setup: `go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
 - **CustomSingleflight is consistently fastest.**
-  - `keys=1` (worst contention): **49.34 ns/op** vs std **199.9** (@P=1 → ~**4.0×**), **164.6** vs **282.4** (@P=4 → ~**1.7×**).
-  - `keys=10` (moderate contention): **42.67** vs **196.6** (@P=1 → ~**4.6×**), **152.3** vs **331.7** (@P=4 → ~**2.2×**).
+  - `keys=1` (worst contention): **42.49 ns/op** vs std **195.1** (@P=1 → ~**4.6×**), **151.2** vs **337.7** (@P=4 → ~**2.2×**).
+  - `keys=10` (moderate contention): **49.51** vs **197.5** (@P=1 → ~**4.0×**), **199.8** vs **302.3** (@P=4 → ~**1.5×**).
 - **Allocations / memory**
   - CustomSingleflight: **0 allocs/op (≈0 B/op)**.
   - GenericsSingleflight: **0–1 allocs/op (~75–80 B/op)**.
