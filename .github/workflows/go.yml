@@ -1,5 +1,15 @@
 name: Go
-on: [push]
+on:
+  push:
+    paths:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+      - benchmark/*.go
+      - benchmark/go.mod
+      - benchmark/go.sum
+      - Makefile
+      - .github/workflows/go.yml
 jobs:
   test:
     name: Build
@@ -24,5 +34,4 @@ jobs:
 
       - name: benchmark
         run: |
-          cd benchmark
-          go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4
+          go test -C benchmark -modfile=go.mod -bench=. -benchmem -benchtime=3s -cpu=1,2,4

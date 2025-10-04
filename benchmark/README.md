@@ -58,7 +58,7 @@ PASS
 
 ![keys=10](./images/ns_op%20-%20keys=10.png)
 
-- Setup: `go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
+- Setup: `go test -C benchmark -modfile=go.mod -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
 - **CustomSingleflight is consistently fastest.**
   - `keys=1` (worst contention): **42.49 ns/op** vs std **195.1** (@P=1 → ~**4.6×**), **151.2** vs **337.7** (@P=4 → ~**2.2×**).
   - `keys=10` (moderate contention): **49.51** vs **197.5** (@P=1 → ~**4.0×**), **199.8** vs **302.3** (@P=4 → ~**1.5×**).

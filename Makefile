@@ -4,7 +4,7 @@ test:
 
 .PHONY: bench
 bench:
-	go test -bench=. -benchmem
+	go test -C benchmark -modfile=go.mod -bench=. -benchmem
 
 .PHONY: vet
 vet:
