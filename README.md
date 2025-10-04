@@ -263,6 +263,8 @@ The `benchmark/` module compares several singleflight variants in Go. Singleflig
 
 ### Benchmark Results
 
+Benchmarks use a dedicated module in `benchmark/go.mod` so they can evolve dependencies independently; run them with `go test -C benchmark -modfile=go.mod` to pick up the local sources.
+
 Environment: EC2 c7g.xlarge (Graviton3, 4 vCPU) / Debian 13 / Go 1.25.1
 
 ```
@@ -300,7 +302,7 @@ PASS
 ![keys=1](benchmark/images/ns_op%20-%20keys=1.png)
 ![keys=10](benchmark/images/ns_op%20-%20keys=10.png)
 
-- Setup: `go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
+- Setup: `go test -C benchmark -modfile=go.mod -bench=. -benchmem -benchtime=3s -cpu=1,2,4` (RunParallel), `keys=1,10`, trivial `fn` (`return i, nil`).
 - **CustomSingleflight is consistently fastest.**
   - `keys=1` (worst contention): **42.49 ns/op** vs std **195.1** (@P=1 → ~**4.6×**), **151.2** vs **337.7** (@P=4 → ~**2.2×**).
   - `keys=10` (moderate contention): **49.51** vs **197.5** (@P=1 → ~**4.0×**), **199.8** vs **302.3** (@P=4 → ~**1.5×**).
@@ -322,11 +324,10 @@ docker build -t benchmark-runner .
 docker run --rm benchmark-runner
 ```
 
-Or, run the Go benchmarks directly:
+Or, run the Go benchmarks directly from the repository root:
 
 ```bash
-cd benchmark
-go test -bench=. -benchmem -benchtime=3s -cpu=1,2,4
+go test -C benchmark -modfile=go.mod -bench=. -benchmem -benchtime=3s -cpu=1,2,4
 ```
 
 ## Documentation
